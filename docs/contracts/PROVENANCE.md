@@ -18,3 +18,7 @@
 - **SDK:** `mcp` (Python) 2.x (PyPI 2.3.0; v2.0.0 stable) serves all prior revisions from the same server.
 - **Constraint:** no tool depends on a server-initiated request (elicitation/sampling/roots removed in 2026-07-28).
 - **Consulted:** 2026-11-26
+## exa-tools-list-2.0.0.json
+- **Source:** keyless Exa MCP `tools/list` (server `exa-search-server` 3.5.1), captured 2026-11-23.
+- **sha256:** `fea673a345ed2c4e1c117c32a2568024e17889b7ace67f993801e6c531fe2fcb`
+- **Use:** versioned `tools/list` snapshot (D103); compared in CI against `docs/fixtures/exa-mcp/tools.json`. No API calls made.
