@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# Secrets (never commit)
+.env
+.env.*
+!.env.example
+
+# SDD scratch (git-ignored ledger/briefs)
+.superpowers/
+
+# OS
+.DS_Store
