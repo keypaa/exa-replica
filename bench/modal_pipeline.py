@@ -26,9 +26,10 @@ image = (
         "numpy",
         "pyarrow",
     )
+    .env({"PYTHONPATH": "/root", "HF_HOME": "/cache"})
+    # add_local_* must be last (Modal adds them at container startup).
     .add_local_dir("src/exa_replica", "/root/exa_replica")
     .add_local_file("docs/fixtures/exa-mcp/query_plan.jsonl", "/root/query_plan.jsonl")
-    .env({"PYTHONPATH": "/root", "HF_HOME": "/cache"})
 )
 
 hf_cache = modal.Volume.from_name("exa-replica-hf", create_if_missing=True)
