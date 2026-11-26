@@ -15,6 +15,7 @@ import argparse
 import json
 import sys
 import urllib.request
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
@@ -24,6 +25,9 @@ from exa_replica.adapters.outbound.encoder import load_embedder
 from exa_replica.adapters.outbound.extract import extract
 from exa_replica.adapters.outbound.store import ContentStore
 from exa_replica.application.chunker import CHUNKER_VERSION, chunk
+from exa_replica.domain.document import canon_v1
+
+_GENERATION = "CC-MAIN-2026-43"
 
 
 def _log(msg: str) -> None:
@@ -38,7 +42,12 @@ def _iter_html(path: str, n: int):
     for rec in ArchiveIterator(stream):
         if rec.rec_type != "response":
             continue
-        yield rec.content_stream().read().decode("utf-8", "replace"), rec.rec_headers.get_header("WARC-Date", "")
+        url = rec.rec_headers.get_header("WARC-Target-URI", "")
+        yield (
+            url,
+            rec.content_stream().read().decode("utf-8", "replace"),
+            rec.rec_headers.get_header("WARC-Date", ""),
+        )
         count += 1
         if count >= n:
             break
@@ -59,8 +68,15 @@ def main() -> None:
     _log(f"[1/3] reading WARC (n={args.n}) ...")
     items = []
     passages = []
-    for i, (html, date) in enumerate(_iter_html(args.warc, args.n), 1):
+    for i, (url, html, date) in enumerate(_iter_html(args.warc, args.n), 1):
         doc = clean(extract(html, date))
+        # extract() is URL-agnostic; set identity from the WARC record (D18/D29).
+        doc = replace(
+            doc,
+            url_canonical=canon_v1(url),
+            url_original=url,
+            generation=_GENERATION,
+        )
         if doc.exclusion == "none" and doc.text_canonical:
             ch = chunk(doc)
             if ch.passages:
@@ -88,11 +104,15 @@ def main() -> None:
         "profile": "RTX Pro 6000",
         "model": args.model,
         "chunker_version": CHUNKER_VERSION,
+        "generation": _GENERATION,
         "n_docs": len(items),
         "n_passages": len(passages),
+        "empty_url_docs": sum(1 for d, _ in items if not d.url_canonical),
         "dim": int(vectors.shape[1]) if vectors.size else 0,
         "vectors_bytes": int(vectors.nbytes),
     }
+    if manifest["empty_url_docs"]:
+        _log(f"WARNING: {manifest['empty_url_docs']} docs have empty url_canonical — corpus identity is broken")
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2))
     _log(json.dumps(manifest, indent=2))
     print(json.dumps(manifest, indent=2))
