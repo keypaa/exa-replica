@@ -42,13 +42,23 @@ Record `tokens_per_word`, `passages_per_doc`, `overflow_passages` and freeze the
 `TBD-B` values in `docs/s4_passage_spec_skeleton.md` as **D44** (amend the
 decision with the measured values + date). Send `run_b.json` back.
 
-## 3. D81 quality (nDCG@10 on dev)  [blocked: needs the judged golden set]
+## 3. Build the T0 corpus (feeds golden set / D81 / D82)  [needs GPU]
 
-Needs the judged dev golden set (candidates retrieved from the T0 corpus). Build
-the corpus first (step 4), then run the eval harness. **Blocked until the golden
-set is judged.**
+```bash
+uv run --with warcio,transformers,sentence-transformers,numpy \
+    python bench/rtx/build_corpus.py --warc "$WARC_URL" --n 10000 \
+    --out-dir bench/results/corpus --model intfloat/multilingual-e5-small
+cat bench/results/corpus/manifest.json
+```
+Writes `store/`, `passages.jsonl`, `vectors.npy`, `manifest.json`. This is the
+corpus the golden set, D81 quality, and D82 run against.
 
-## 4. D82 R0/R1 + baseline build  [needs M3 build/index code]
+## 4. D81 quality (nDCG@10 on dev)  [blocked: needs the judged golden set]
+
+Needs the judged dev golden set (candidates retrieved from the corpus built in
+step 3). **Blocked until the golden set is judged.**
+
+## 5. D82 R0/R1 + baseline build  [needs M3 build/index code]
 
 The full build → index pipeline lands in M3. Once present:
 ```bash
