@@ -47,6 +47,10 @@ JUDGE_MODEL = "Qwen/Qwen2.5-7B-Instruct"
     timeout=7200,
 )
 def run(warc_url: str, n: int, model: str, k: int = 20) -> dict:
+    # ---- build ----
+    import os
+    import shutil
+    import time
     import urllib.request
     from dataclasses import replace
 
@@ -62,11 +66,6 @@ def run(warc_url: str, n: int, model: str, k: int = 20) -> dict:
     from exa_replica.application.fusion import fuse
     from exa_replica.domain.document import canon_v1
     from exa_replica.domain.models import Filters, Hit, Passage
-
-    # ---- build ----
-    import os
-    import shutil
-    import time
 
     # fresh corpus (the Volume persists across runs)
     for p in ("/corpus/store", "/corpus/vectors.npy", "/corpus/passages.jsonl"):
