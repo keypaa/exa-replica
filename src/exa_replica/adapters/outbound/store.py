@@ -152,6 +152,18 @@ class ContentStore:
                 return str(row["text"])
         return None
 
+    def all_texts(self) -> dict[str, str]:
+        """Read every shard once → {url_canonical: text} (excludes taken-down)."""
+        out: dict[str, str] = {}
+        for shard in range(self.n_shards):
+            f = self._shard_file(shard)
+            if not f.exists():
+                continue
+            for row in pq.read_table(f).to_pylist():
+                if row["exclusion"] == "none":
+                    out[row["url_canonical"]] = str(row["text"])
+        return out
+
     def get_passages(self, url_canonical: str) -> list[tuple[Passage, str]]:
         if not self._pass_file().exists():
             return []

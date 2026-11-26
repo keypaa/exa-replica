@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -26,11 +27,12 @@ from exa_replica.domain.models import Filters, Hit, Passage
 
 
 def _load_passages(corpus: Path, store: ContentStore) -> list[Passage]:
+    texts = store.all_texts()  # one read per shard, not per passage
     passages = []
     with open(corpus / "passages.jsonl") as f:
         for line in f:
             r = json.loads(line)
-            text = store.get_text(r["doc_id"]) or ""
+            text = texts.get(r["doc_id"], "")
             raw = text.encode("utf-8")
             ptext = raw[r["start"] : r["end"]].decode("utf-8", "replace")
             passages.append(
@@ -53,12 +55,15 @@ def main() -> None:
     passages = _load_passages(corpus, store)
     vectors = np.load(corpus / "vectors.npy")
     bm25 = BM25Index(passages)
-    embedder = load_embedder(args.model)
+    embedder = load_embedder(args.model, device="cuda")
 
     with open(args.queries) as qf:
         queries = [json.loads(l) for l in qf if l.strip()]
+    print(f"loaded {len(passages)} passages, {len(queries)} queries; encoding on cuda", file=sys.stderr, flush=True)
     with open(args.out, "w") as out:
-        for q in queries:
+        for qi, q in enumerate(queries, 1):
+            if qi % 5 == 0:
+                print(f"  query {qi}/{len(queries)}", file=sys.stderr, flush=True)
             qvec = np.asarray(embedder.embed([q["query"]])[0], dtype=np.float32)
             scores = vectors @ qvec
             order = np.argsort(-scores)[: args.k]

@@ -26,7 +26,7 @@ class Embedder:
         return [[float(x) for x in vec] for vec in raw]
 
 
-def load_embedder(model_name: str = DEFAULT_MODEL) -> Embedder:
+def load_embedder(model_name: str = DEFAULT_MODEL, device: str = "cpu") -> Embedder:
     from sentence_transformers import SentenceTransformer
 
-    return Embedder(SentenceTransformer(model_name))
+    return Embedder(SentenceTransformer(model_name, device=device))

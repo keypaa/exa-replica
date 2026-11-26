@@ -69,9 +69,9 @@ def judge_batch(cands: list[dict]) -> list[dict]:
 
 @app.local_entrypoint()
 def main():
-    cands = [json.loads(l) for l in open("bench/results/candidates.jsonl") if l.strip()]
+    with open("bench/results/candidates.jsonl") as f:
+        cands = [json.loads(l) for l in f if l.strip()]
     results = judge_batch.remote(cands)
     with open("bench/results/golden_dev.jsonl", "w") as f:
-        for r in results:
-            f.write(json.dumps(r) + "\n")
+        f.writelines(json.dumps(r) + "\n" for r in results)
     print(f"judged {len(results)} candidates -> bench/results/golden_dev.jsonl")
