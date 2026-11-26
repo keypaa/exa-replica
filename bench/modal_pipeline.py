@@ -23,6 +23,7 @@ image = (
         "sentence-transformers==3.1.1",
         "accelerate==0.34.2",
         "warcio",
+        "trafilatura",
         "numpy",
         "pyarrow",
     )
