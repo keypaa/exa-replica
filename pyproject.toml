@@ -11,6 +11,7 @@ dependencies = [
   "mcp>=2,<3",
   "pydantic",
   "pydantic-settings",
+  "trafilatura",
 ]
 
 [tool.exa-replica]
@@ -30,10 +31,17 @@ packages = ["src/exa_replica"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+filterwarnings = [
+  "ignore:SOCKS support in urllib3",
+]
 
 [tool.mypy]
 strict = true
 files = ["src/exa_replica"]
+
+[[tool.mypy.overrides]]
+module = "resiliparse.*"
+ignore_missing_imports = true
 
 [tool.ruff]
 extend-exclude = ["zenno"]
