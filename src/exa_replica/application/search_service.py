@@ -12,9 +12,8 @@ from exa_replica.domain.models import Filters, Hit
 
 
 class SearchService:
-    def __init__(self, orchestrator: Orchestrator, tier: str = "auto") -> None:
+    def __init__(self, orchestrator: Orchestrator) -> None:
         self._orchestrator = orchestrator
-        self._tier = tier
 
     def run(
         self,

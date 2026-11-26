@@ -12,7 +12,7 @@ contracts:
 	uv run lint-imports
 
 test:
-	uv run pytest -q
+	uv run pytest -q --cov=exa_replica.domain --cov=exa_replica.application --cov-report=term-missing --cov-fail-under=80
 
 # Best-effort in the dev box; CI installs gitleaks + pip-audit and runs them for real.
 audit:

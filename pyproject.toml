@@ -19,7 +19,7 @@ dependencies = [
 mcp_target_revision = "2026-07-28"
 
 [dependency-groups]
-dev = ["pytest", "mypy", "ruff", "import-linter"]
+dev = ["pytest", "pytest-cov", "mypy", "ruff", "import-linter"]
 
 [build-system]
 requires = ["hatchling"]
@@ -37,3 +37,6 @@ files = ["src/exa_replica"]
 
 [tool.ruff]
 extend-exclude = ["zenno"]
+
+[tool.coverage.run]
+source = ["src/exa_replica/domain", "src/exa_replica/application"]

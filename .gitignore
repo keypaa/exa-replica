@@ -19,3 +19,8 @@ build/
 
 # OS
 .DS_Store
+zenno/traces/
+zenno/telemetry/
+zenno/graph/
+zenno/.initialized
+zenno/config.json

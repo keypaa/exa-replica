@@ -16,15 +16,14 @@ from exa_replica.adapters.outbound.ann import StubDenseIndex, StubLexicalIndex
 from exa_replica.application.orchestrator import Orchestrator
 from exa_replica.application.plans import plan_for
 from exa_replica.application.search_service import SearchService
+from exa_replica.bootstrap.config import Settings
 from exa_replica.ports.index import DenseIndex, LexicalIndex
 
 
 def build_gateway(
     dense: DenseIndex, lexical: LexicalIndex, tier: str = "auto"
 ) -> FastAPI:
-    service = SearchService(
-        Orchestrator(dense, lexical, plan_for(tier)), tier=tier
-    )
+    service = SearchService(Orchestrator(dense, lexical, plan_for(tier)))
     mcp_server = create_mcp_server(service)
     mcp_app = mcp_server.streamable_http_app(
         streamable_http_path="/",
@@ -42,5 +41,7 @@ def build_gateway(
     return app
 
 
-def build_default_gateway(tier: str = "auto") -> FastAPI:
-    return build_gateway(StubDenseIndex(), StubLexicalIndex(), tier=tier)
+def build_default_gateway(settings: Settings | None = None) -> FastAPI:
+    # Constructing Settings validates config; invalid config refuses startup (D92).
+    settings = settings or Settings()
+    return build_gateway(StubDenseIndex(), StubLexicalIndex(), tier=settings.tier)
