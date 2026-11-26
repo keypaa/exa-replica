@@ -7,11 +7,10 @@ the gateway serves the surface end-to-end on stub adapters.
 from __future__ import annotations
 
 import time
-from collections.abc import Callable
-from contextlib import AbstractAsyncContextManager
 
 from fastapi import FastAPI
 from pydantic import BaseModel
+from starlette.types import Lifespan
 
 from exa_replica.application.search_service import SearchService
 from exa_replica.domain.models import Filters
@@ -26,7 +25,7 @@ class SearchRequest(BaseModel):
 
 def create_http_app(
     service: SearchService,
-    lifespan: Callable[..., AbstractAsyncContextManager[None]] | None = None,
+    lifespan: Lifespan[FastAPI] | None = None,
 ) -> FastAPI:
     app = FastAPI(title="exa-replica", lifespan=lifespan)
 

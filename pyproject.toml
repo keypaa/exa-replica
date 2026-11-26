@@ -25,3 +25,10 @@ packages = ["src/exa_replica"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.mypy]
+strict = true
+files = ["src/exa_replica"]
+
+[tool.ruff]
+extend-exclude = ["zenno"]
