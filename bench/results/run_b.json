@@ -1,0 +1,24 @@
+{
+  "run_id": "b-20261126T210000Z",
+  "profile": "RTX Pro 6000",
+  "python": "3.13",
+  "date": "2026-11-26",
+  "corpus": {
+    "crawl": "CC-MAIN-2026-43",
+    "warc": "crawl-data/CC-MAIN-2026-43/segments/1791170053823.21/warc/CC-MAIN-20261005105623-20261005135623-00162.warc.gz",
+    "sample": "single WARC segment (first 2000 response records)"
+  },
+  "chunker_version": "uax29-1.0;target=180;max=400;overlap=1",
+  "tokenizer": "intfloat/multilingual-e5-small",
+  "n_docs": 1899,
+  "n_passages": 6704,
+  "words": 873774,
+  "tokens": 2163068,
+  "tokens_per_word": 2.4755,
+  "passages_per_doc": 3.53,
+  "overflow_passages": 114,
+  "max_words": 400,
+  "overflow_rate": 0.017,
+  "overflow_threshold": 0.005,
+  "note": "overflow 1.7% > 0.5% threshold at max 400 words -> max_size must be lowered to fit the 512-token budget; tokens_per_word is the aggregate ratio (not median/p95)."
+}

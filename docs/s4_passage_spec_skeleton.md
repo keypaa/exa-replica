@@ -1,6 +1,6 @@
 # S4 — Passage Spec Skeleton (A, pre-B)
 
-**Status:** skeleton. Every numeric value is **`TBD-B`**. Frozen as **D44** only after the B measurements.
+**Status:** **FROZEN as D44 (2026-11-26)** from Run B (`bench/results/run_b.json`): tokens/word = **2.4755** (e5-small), 1899 docs → 6704 passages. Values below are frozen; `chunker_version` excludes the model tokenizer (D60).
 **Rule:** the chunker is deterministic; same `text_canonical` + same `chunker_version` → same passages, bit-exact.
 **Amendment (D60):** the chunking unit is **model-independent** (default **UAX #29 words/sentences**); the embedding-model tokenizer is a **constraint only**, never part of `chunker_version`.
 
@@ -12,10 +12,10 @@
 
 | Parameter | Value | Notes |
 |---|---|---|
-| `target_size` | `TBD-B` (**~180–200 words** ≈ 256 tokens EN) | candidates 128 / 256 / 512 **tokens** → converted to words by B |
-| `overlap` | `TBD-B` (**1 sentence**) | may be 0 |
+| `target_size` | **128 words** (≈317 tok @ 2.48 t/w) | **D44**; fits p99 ≤ `budget_passage` |
+| `overlap` | **1 sentence** | **D44** |
 | `min_size` | `TBD-B` | below → merge with previous/next |
-| `max_size` | `TBD-B` (**~350–400 words** ≈ 512 tokens EN) | hard cap; also ≤ reranker `max_pair_tokens` − max query (D67) |
+| `max_size` | **192 words** (≈476 tok < 490 budget) | **D44**; 400 words → 1.7% overflow > 0.5% threshold |
 | `reference_unit` | **UAX #29 words** + version | part of `chunker_version` (D60) |
 | `sentence_splitter` + version | language-specific (EN/FR) | part of `chunker_version` |
 | `title_prefix` | index config | **not** in the chunker; doc template decides placement (D61) |

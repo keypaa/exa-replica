@@ -14,10 +14,10 @@ from dataclasses import dataclass
 from exa_replica.domain.document import Document
 from exa_replica.domain.models import Passage
 
-CHUNKER_VERSION = "uax29-1.0;target=180;max=400;overlap=1"
+CHUNKER_VERSION = "uax29-1.0;target=128;max=192;overlap=1"
 
-_TARGET_WORDS = 180
-_MAX_WORDS = 400
+_TARGET_WORDS = 128
+_MAX_WORDS = 192
 _OVERLAP_SENTENCES = 1
 
 _WORD_RE = re.compile(r"\w+", re.UNICODE)
