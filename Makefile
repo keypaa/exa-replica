@@ -3,7 +3,7 @@
 check: lint type contracts test audit
 
 lint:
-	uv run ruff check src/ tests/
+	uv run ruff check src/ tests/ eval/
 
 type:
 	uv run mypy --strict src/exa_replica/

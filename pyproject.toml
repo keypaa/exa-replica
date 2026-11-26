@@ -32,7 +32,8 @@ build-backend = "hatchling.build"
 packages = ["src/exa_replica"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "eval/tests"]
+pythonpath = ["."]
 filterwarnings = [
   "ignore:SOCKS support in urllib3",
 ]
