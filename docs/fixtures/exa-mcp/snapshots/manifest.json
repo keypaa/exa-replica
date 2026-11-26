@@ -1,0 +1,14 @@
+{
+  "captured_at": "20261123T201821Z",
+  "base_url": "https://api.exa.ai",
+  "query_plan": "docs/fixtures/exa-mcp/query_plan.jsonl",
+  "query_plan_sha256": "8909839f8d4f2fa0df8b052d8a1a665478378fc42805134ce4dbea162a0184df",
+  "n_queries": 30,
+  "n_responses": 30,
+  "tiers": [
+    "auto",
+    "deep",
+    "lite"
+  ],
+  "num_results": 5
+}

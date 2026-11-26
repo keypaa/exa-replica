@@ -1,0 +1,15 @@
+{
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "# React vs Vue Performance Benchmark: Speed and Efficiency Compared\nURL: https://www.buttercups.tech/blog/react/react-vs-vue-performance-benchmark-speed-and-efficiency-compared\nPublished: 2025-06-08\n\nReact vs Vue Performance Benchmark: Speed and Efficiency Compared\n\nJune 8, 2025· 9 min read\n\n# React vs Vue Performance Benchmark: Speed and Efficiency Compared\n\nReact and Vue have risen to become two of the most dominant JavaScript frameworks for building user interfaces. Developers, tech leads, and CTOs consistently analyze their capabilities, especially when it comes to performance—a pivotal factor for creating efficient, fast, and scalable web applications. In this comprehensive comparison, we delve deep into the intricacies of the React vs Vue performance benchmark, exploring the speed and efficiency both offer in real-world scenarios. Whether you’re deciding which framework to choose for a new project or looking to optimize an existing application, understanding these performance differences is crucial.\n\n## Understanding Performance in Front-End Frameworks\n\nWhen evaluating the React vs Vue performance benchmark, it’s important to define what performance means in the context of a JavaScript framework. Broadly, performance encompasses the speed at which frameworks render content, handle updates, and maintain a smooth user experience under various loads. The two main aspects to",
+        "_meta": {
+          "searchTime": 12.932158999843523
+        }
+      }
+    ]
+  },
+  "jsonrpc": "2.0",
+  "id": 4
+}
