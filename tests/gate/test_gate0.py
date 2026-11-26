@@ -8,7 +8,7 @@ def test_gate0_core_api(client):
             "/search", json={"query": "cat", "type": tier, "numResults": 10}
         )
         assert r.status_code == 200
-        assert "results" in r.json()
+        assert r.json()["results"], f"{tier} search must return results"
 
     # /contents
     r = client.post("/contents", json={"urls": ["https://x.com/a"]})
@@ -26,11 +26,11 @@ def test_gate0_core_api(client):
         client.post("/contents", json={"urls": ["x"], "bogus": 1}).status_code == 400
     )
 
-    # /search -> /contents path
+    # /search -> /contents path (non-vacuous: results must be present)
     s = client.post(
         "/search", json={"query": "cat", "type": "lite", "numResults": 10}
     ).json()
-    if s["results"]:
-        url = s["results"][0]["id"]
-        c = client.post("/contents", json={"urls": [url]}).json()
-        assert c["results"][0]["status"] == "ok"
+    assert s["results"], "search must return at least one hit"
+    url = s["results"][0]["id"]
+    c = client.post("/contents", json={"urls": [url]}).json()
+    assert c["results"][0]["status"] == "ok"

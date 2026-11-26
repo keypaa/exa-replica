@@ -4,7 +4,8 @@ Tantivy is the frozen v1 target (D83); `tantivy-py` has no cp312 wheel, so M1
 uses this provisional BM25 behind the `LexicalIndex` port (swap on the reference
 box). Two fields `text_en`/`text_fr`; a passage is indexed in its language field;
 queries hit both fields. k1=1.2, b=0.75 fixed (D83). Document score = max over
-passages is applied later (fusion, Task 7).
+passages is applied later (fusion, Task 7). Domain filters (D70) are applied
+before scoring; unsupported filters raise `UnsupportedFilter`.
 """
 
 from __future__ import annotations
@@ -15,7 +16,8 @@ import unicodedata
 from collections import Counter
 from collections.abc import Sequence
 
-from exa_replica.domain.models import Filters, Hit, Passage
+from exa_replica.domain.document import host_matches
+from exa_replica.domain.models import Filters, Hit, Passage, ensure_supported_filters
 
 _K1 = 1.2
 _B = 0.75
@@ -36,15 +38,17 @@ class BM25Index:
         self._version = "bm25-py-provisional-1"
         self._field_docs: dict[str, list[Counter[str]]] = {"text_en": [], "text_fr": []}
         self._field_len: dict[str, list[int]] = {"text_en": [], "text_fr": []}
+        self._field_passage: dict[str, list[Passage]] = {"text_en": [], "text_fr": []}
         self._df: dict[str, Counter[str]] = {"text_en": Counter(), "text_fr": Counter()}
-        self._passage_meta: list[Passage] = []
+        self._by_id: dict[str, Passage] = {}
         for p in passages:
             field = "text_fr" if p.lang == "fr" else "text_en"
             tokens = _tokenize(p.text)
             counts = Counter(tokens)
             self._field_docs[field].append(counts)
             self._field_len[field].append(len(tokens))
-            self._passage_meta.append(p)
+            self._field_passage[field].append(p)
+            self._by_id[p.passage_id] = p
             for term in counts:
                 self._df[field][term] += 1
         self._avglen = {
@@ -76,21 +80,25 @@ class BM25Index:
     def search(
         self, query: str, filters: Filters, k: int, deadline: float
     ) -> list[Hit]:
+        ensure_supported_filters(filters)
         terms = _tokenize(query)
         if not terms or deadline <= 0:
             return []
-        # Query both fields; combine per passage (passages are disjoint across fields).
-        per_passage: dict[int, float] = {}
+        # Score per passage (each passage lives in exactly one field); apply the
+        # domain filter (D70) before ranking.
+        per_passage: dict[str, float] = {}
         for field in ("text_en", "text_fr"):
             for i, s in enumerate(self._score_field(terms, field)):
-                if s > 0:
-                    per_passage[i] = per_passage.get(i, 0.0) + s
+                if s <= 0:
+                    continue
+                p = self._field_passage[field][i]
+                if not host_matches(p.doc_id, filters.domains):
+                    continue
+                per_passage[p.passage_id] = per_passage.get(p.passage_id, 0.0) + s
         ranked = sorted(per_passage.items(), key=lambda kv: (-kv[1], kv[0]))[:k]
-        hits: list[Hit] = []
-        for i, score in ranked:
-            meta = self._passage_meta[i]
-            hits.append(Hit(doc_id=meta.doc_id, score=score, passage_id=meta.passage_id))
-        return hits
+        return [
+            Hit(self._by_id[pid].doc_id, score, pid) for pid, score in ranked
+        ]
 
     def stats(self) -> dict[str, float | int | str]:
         return {

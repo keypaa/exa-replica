@@ -94,7 +94,7 @@ def chunk(doc: Document) -> Chunking:
         passages.append(
             Passage(
                 passage_id=passage_id,
-                doc_id=f"{doc.generation}:{doc.url_canonical}",
+                doc_id=doc.url_canonical,
                 text=ptext,
                 start=_byte_off(text, start_char),
                 end=_byte_off(text, end_char),

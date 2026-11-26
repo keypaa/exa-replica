@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from exa_replica.domain.errors import UnsupportedFilter
+
 
 @dataclass(frozen=True, slots=True)
 class Filters:
@@ -18,6 +20,14 @@ class Filters:
     start_date: str | None = None
     end_date: str | None = None
     category: str | None = None
+
+
+def ensure_supported_filters(filters: Filters) -> None:
+    """D70: apply fully or raise; date/category are unsupported in M1."""
+    if filters.start_date or filters.end_date or filters.category:
+        raise UnsupportedFilter(
+            "date/category filters are unsupported in M1 (D70/D85)"
+        )
 
 
 @dataclass(frozen=True, slots=True)

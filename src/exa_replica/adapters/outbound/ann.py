@@ -12,7 +12,13 @@ from collections.abc import Sequence
 import numpy as np
 
 from exa_replica.adapters.outbound.encoder import Embedder
-from exa_replica.domain.models import Filters, Hit, Passage
+from exa_replica.domain.document import host_matches
+from exa_replica.domain.models import (
+    Filters,
+    Hit,
+    Passage,
+    ensure_supported_filters,
+)
 
 
 class DenseIndex:
@@ -31,19 +37,21 @@ class DenseIndex:
     def search(
         self, query: str, filters: Filters, k: int, deadline: float
     ) -> list[Hit]:
+        ensure_supported_filters(filters)
         if self._vectors.size == 0 or deadline <= 0:
             return []
         q = np.asarray(self._embedder.embed([query])[0], dtype=np.float32)
         scores = self._vectors @ q
-        order = np.argsort(-scores)[:k]
-        return [
-            Hit(
-                doc_id=self._passages[i].doc_id,
-                score=float(scores[i]),
-                passage_id=self._passages[i].passage_id,
-            )
-            for i in order
-        ]
+        order = np.argsort(-scores)
+        hits: list[Hit] = []
+        for i in order:
+            p = self._passages[int(i)]
+            if not host_matches(p.doc_id, filters.domains):
+                continue
+            hits.append(Hit(p.doc_id, float(scores[i]), p.passage_id))
+            if len(hits) >= k:
+                break
+        return hits
 
     def stats(self) -> dict[str, float | int | str]:
         return {"vectors": int(self._vectors.shape[0])}

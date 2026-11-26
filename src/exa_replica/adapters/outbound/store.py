@@ -25,6 +25,7 @@ _DOC_SCHEMA = pa.schema(
         ("text", pa.string()),
         ("lang", pa.string()),
         ("content_hash", pa.string()),
+        ("exclusion", pa.string()),
     ]
 )
 _PASS_SCHEMA = pa.schema(
@@ -78,6 +79,7 @@ class ContentStore:
                     "text": doc.text_canonical,
                     "lang": doc.lang,
                     "content_hash": doc.content_hash,
+                    "exclusion": doc.exclusion,
                 }
             ],
         )
@@ -109,6 +111,9 @@ class ContentStore:
             return None
         for row in pq.read_table(f).to_pylist():
             if row["url_canonical"] == url_canonical:
+                # D52: an excluded (takedown/opt-out/PII) doc is absent at serving.
+                if row["exclusion"] != "none":
+                    return None
                 return str(row["text"])
         return None
 

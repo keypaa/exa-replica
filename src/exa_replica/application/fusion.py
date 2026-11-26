@@ -24,7 +24,13 @@ class DocHit:
 
 
 def _ranks(hits: Sequence[Hit]) -> dict[str, tuple[int, str]]:
-    return {h.doc_id: (i + 1, h.passage_id) for i, h in enumerate(hits)}
+    # Keep the best (minimum) rank per doc and its passage (D83/2).
+    out: dict[str, tuple[int, str]] = {}
+    for i, h in enumerate(hits):
+        rank = i + 1
+        if h.doc_id not in out or rank < out[h.doc_id][0]:
+            out[h.doc_id] = (rank, h.passage_id)
+    return out
 
 
 def fuse(bm25_hits: Sequence[Hit], dense_hits: Sequence[Hit]) -> list[DocHit]:

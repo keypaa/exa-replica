@@ -7,6 +7,7 @@ shared by pipeline and API; it is frozen per generation (D43).
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from urllib.parse import parse_qsl, quote, urlencode, urlsplit, urlunsplit
 
@@ -77,11 +78,17 @@ def canon_v1(url: str) -> str:
             host = host.encode("idna").decode("ascii")
         except UnicodeError:
             pass
-    port = parts.port
+    try:
+        port = parts.port
+    except ValueError:
+        port = None
     default = (scheme == "http" and port == 80) or (scheme == "https" and port == 443)
     if port is not None and not default:
         host = f"{host}:{port}"
-    path = quote(_remove_dot_segments(parts.path or ""), safe="/:@-._~!$&'()*+,;=")
+    path = quote(
+        _remove_dot_segments(parts.path or ""),
+        safe="/:@-._~!$&'()*+,;=%",
+    )
     pairs = [
         (k, v)
         for k, v in parse_qsl(parts.query, keep_blank_values=True)
@@ -89,3 +96,15 @@ def canon_v1(url: str) -> str:
     ]
     query = urlencode(pairs, doseq=True)
     return urlunsplit((scheme, host, path, query, ""))
+
+
+def host_matches(url: str, domains: Sequence[str]) -> bool:
+    """D70 domain filter: exact host or whole-label subdomain; empty = match all."""
+    if not domains:
+        return True
+    host = (urlsplit(url).hostname or "").lower()
+    for d in domains:
+        d = d.lower().lstrip(".")
+        if host == d or host.endswith("." + d):
+            return True
+    return False
