@@ -1,0 +1,63 @@
+[
+  {
+    "model": "intfloat/multilingual-e5-small",
+    "dim": 384,
+    "throughput_passages_per_s": {
+      "32": 2451.4,
+      "64": 2948.9,
+      "128": 3251.1,
+      "256": 3449.8
+    },
+    "query_p95_ms": 7.09,
+    "gpu": "A10G",
+    "architecture": "Ampere GA102",
+    "vram_gb": 24,
+    "bandwidth_gbps": 600,
+    "fp16_tensor_tflops": 70,
+    "precision": "fp32 (sentence-transformers default)"
+  },
+  {
+    "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    "dim": 384,
+    "throughput_passages_per_s": {
+      "32": 2398.9,
+      "64": 2850.3,
+      "128": 3114.6,
+      "256": 3335.4
+    },
+    "query_p95_ms": 6.79,
+    "gpu": "A10G",
+    "architecture": "Ampere GA102",
+    "vram_gb": 24,
+    "bandwidth_gbps": 600,
+    "fp16_tensor_tflops": 70,
+    "precision": "fp32 (sentence-transformers default)"
+  },
+  {
+    "model": "intfloat/multilingual-e5-base",
+    "dim": 768,
+    "throughput_passages_per_s": {
+      "32": 996.5,
+      "64": 1119.8,
+      "128": 1130.2,
+      "256": 943.0
+    },
+    "query_p95_ms": 7.38,
+    "gpu": "A10G",
+    "architecture": "Ampere GA102",
+    "vram_gb": 24,
+    "bandwidth_gbps": 600,
+    "fp16_tensor_tflops": 70,
+    "precision": "fp32 (sentence-transformers default)"
+  },
+  {
+    "model": "Alibaba-NLP/gte-multilingual-base",
+    "error": "The checkpoint you are trying to load has model type `gte` but Transformers does not recognize this architecture. This could be because of an issue with the checkpoint, or because your version of Tran",
+    "gpu": "A10G",
+    "architecture": "Ampere GA102",
+    "vram_gb": 24,
+    "bandwidth_gbps": 600,
+    "fp16_tensor_tflops": 70,
+    "precision": "fp32 (sentence-transformers default)"
+  }
+]
