@@ -43,6 +43,10 @@ files = ["src/exa_replica"]
 module = "resiliparse.*"
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = "glotlid.*"
+ignore_missing_imports = true
+
 [tool.ruff]
 extend-exclude = ["zenno"]
 
