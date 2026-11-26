@@ -44,3 +44,11 @@ def test_shard_by_hash(tmp_path):
     s1 = store.shard_of("https://x.com/a")
     assert s1 == store.shard_of("https://x.com/a")
     assert 0 <= s1 < 4
+
+
+def test_put_many_roundtrip(tmp_path):
+    store = ContentStore(tmp_path)
+    docs = [_doc("https://x.com/a", "alpha text"), _doc("https://x.com/b", "beta text")]
+    store.put_many([(d, chunk(d).passages) for d in docs])
+    assert store.get_text("https://x.com/a") == "alpha text"
+    assert store.get_text("https://x.com/b") == "beta text"

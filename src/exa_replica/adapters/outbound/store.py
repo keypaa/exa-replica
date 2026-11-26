@@ -102,6 +102,41 @@ class ContentStore:
         mapping[doc.url_canonical] = shard
         self._docstore_path.write_text(json.dumps(mapping))
 
+    def put_many(
+        self, items: Sequence[tuple[Document, Sequence[Passage]]]
+    ) -> None:
+        """Batched write (one Parquet write per shard) — O(n), not O(n^2)."""
+        shard_rows: dict[int, list[dict[str, object]]] = {}
+        pass_rows: list[dict[str, object]] = []
+        mapping: dict[str, int] = {}
+        for doc, passages in items:
+            shard = self.shard_of(doc.url_canonical)
+            mapping[doc.url_canonical] = shard
+            shard_rows.setdefault(shard, []).append(
+                {
+                    "url_canonical": doc.url_canonical,
+                    "text": doc.text_canonical,
+                    "lang": doc.lang,
+                    "content_hash": doc.content_hash,
+                    "exclusion": doc.exclusion,
+                }
+            )
+            for p in passages:
+                pass_rows.append(
+                    {
+                        "passage_id": p.passage_id,
+                        "url_canonical": doc.url_canonical,
+                        "start": p.start,
+                        "end": p.end,
+                        "lang": p.lang,
+                    }
+                )
+        for shard, rows in shard_rows.items():
+            self._append(self._shard_file(shard), _DOC_SCHEMA, rows)
+        if pass_rows:
+            self._append(self._pass_file(), _PASS_SCHEMA, pass_rows)
+        self._docstore_path.write_text(json.dumps(mapping))
+
     def get_text(self, url_canonical: str) -> str | None:
         shard = self._docstore().get(url_canonical)
         if shard is None:
