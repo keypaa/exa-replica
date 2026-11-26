@@ -1,0 +1,45 @@
+WARC/1.0
+WARC-Date: 2026-11-20T00:00:00Z
+WARC-Type: response
+WARC-Record-ID: <urn:uuid:f475219e-aff3-4df9-a85a-fdbeb00690c3>
+WARC-Target-URI: https://example.com/a
+WARC-Payload-Digest: sha1:CSWNMRM4AJ7HG3AGKOLX6YKS7D6OJIXS
+WARC-Block-Digest: sha1:OIP6HB4TPPX7EGEF7B35XZ6NMA5Q2AO4
+Content-Type: application/http; msgtype=response
+Content-Length: 300
+
+HTTP/1.1 200 OK
+Content-Type: text/html; charset=utf-8
+
+<html lang='en'><head><title>Alpha</title><meta property='article:published_time' content='2024-01-02T03:04:05Z'></head><body><p>The cat sat on the mat. It was a warm day and the cat was happy with the warm mat and the sun.</p></body></html>
+
+WARC/1.0
+WARC-Date: 2026-11-21T00:00:00Z
+WARC-Type: response
+WARC-Record-ID: <urn:uuid:64a7fc26-e8f5-4c2e-b1f1-2c570a4e29ab>
+WARC-Target-URI: https://example.com/b
+WARC-Payload-Digest: sha1:PUUK5RLEMRZM47ZG6QMNBZ5LQ6ZY26SG
+WARC-Block-Digest: sha1:TH7E77VRTTSLM5A2RR6C3EYWFJ52XART
+Content-Type: application/http; msgtype=response
+Content-Length: 212
+
+HTTP/1.1 200 OK
+Content-Type: text/html; charset=utf-8
+
+<html lang='fr'><head><title>Beta</title></head><body><p>Le chat est sur le tapis. Il faisait chaud et le chat dort sur le tapis chaud.</p></body></html>
+
+WARC/1.0
+WARC-Date: 2026-11-22T00:00:00Z
+WARC-Type: response
+WARC-Record-ID: <urn:uuid:3aabd907-a6bd-4077-bf3d-bcf187138f7f>
+WARC-Target-URI: https://example.com/c
+WARC-Payload-Digest: sha1:BWLTRKJ7CO5UDWXPVHNPJW4HBIVDATMD
+WARC-Block-Digest: sha1:SGKPUOY5JGE3GNWJK6CLN25YQG3MFPN6
+Content-Type: application/http; msgtype=response
+Content-Length: 230
+
+HTTP/1.1 200 OK
+Content-Type: text/html; charset=utf-8
+
+<html lang='en'><head><title>Gamma</title></head><body><p>Dogs are loyal animals. They bark loudly at the mail carrier every single morning without fail.</p></body></html>
+
