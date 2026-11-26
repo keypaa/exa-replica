@@ -11,7 +11,7 @@
 - [x] **S1** — protocol defined (Gates 0–5 + anti-goals); evidence pending
 - [x] **S2** — contract matrix v1.0-gate0 frozen + v1.1; **0 blocker**
 - [x] **S3** — reference box/corpus + tiers + storage; **0 blocker**
-- [x] **S4** — planning complete; 1 blocker: passage spec (freeze D44 after B)
+- [x] **S4** — planning complete; **D44 frozen 2026-11-26** (Run B, RTX) — passage spec settled
 - [x] **S5** — planning complete (D57–D69, D81); model choice = D81 execution (evidence)
 - [x] **S6** — planning complete (D82–D88); measurements pending
 - [x] **S7** — planning complete (D89–D92); D89 amended 2026-11-26, only version pinning (M0)
@@ -169,7 +169,7 @@ So the 9 subject rows below are the **workstreams**; the 8 blindspots (plus B1a/
 - [x] `[BLOCKER]` Manifest schemas v0 drafted (`docs/s4_manifest_schemas_v0.md`, D46): corpus / build spec+result / artifact / run record
 - [x] `[BLOCKER]` Manifest v1 fields frozen (D79: generation_id, WARC-list hash, versions, model, PromptConfig, precision, counts, licenses)
 - [x] `[BLOCKER]` Minimal document schema (D41, §4.1.1)
-- [ ] `[BLOCKER]` Passage spec (chunking): skeleton + provisional defaults written (`docs/s4_passage_spec_skeleton.md`); unit UAX #29 (D60); freeze values as D44 after B
+- [x] `[BLOCKER]` Passage spec (chunking): **frozen as D44 2026-11-26** (Run B: target 128 / max 192 words, overlap 1; tokens/word 2.4755) — `docs/s4_passage_spec_skeleton.md`, `docs/research/t0-tokens-report.md`
 - [x] `[BLOCKER]` Tokenizer: model tokenizer is a constraint only; `chunker_version` = UAX #29 words (D60)
 - [x] `[BLOCKER]` B protocol: tokens/word + overflow written (`docs/s4_b_tokens_protocol.md`)
 - [x] `[BLOCKER]` B thresholds frozen (`docs/s4_b_thresholds.md`, sha256 `4c9804f7…eeee`) + run_record template
