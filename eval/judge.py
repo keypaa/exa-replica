@@ -11,9 +11,23 @@ from collections import Counter
 from collections.abc import Callable, Sequence
 
 KAPPA_THRESHOLD = 0.6
+UNJUDGED_CAP = 0.15  # D81 step 3: ≤15% unjudged in top-10
+
+
+def unjudged_fraction(judgments: Sequence[int | None]) -> float:
+    if not judgments:
+        return 0.0
+    return sum(1 for j in judgments if j is None) / len(judgments)
+
+
+def needs_complete_judging(judgments: Sequence[int | None]) -> bool:
+    """D81/§1.5: >15% unjudged in top-10 → complete judging before a gate run."""
+    return unjudged_fraction(judgments) > UNJUDGED_CAP
 
 
 def cohen_kappa(a: Sequence[int], b: Sequence[int]) -> float:
+    if len(a) != len(b):
+        raise ValueError("cohen_kappa requires equal-length sequences")
     n = len(a)
     if n == 0:
         return 0.0

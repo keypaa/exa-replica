@@ -17,3 +17,11 @@ def n_test(sigma: float, h: float, cap: int = 400, floor: int = 100) -> int:
     n = max(floor, n)
     n = math.ceil(n / 50) * 50  # round up to 50
     return min(n, cap)
+
+
+def exceeds_cap(sigma: float, h: float, cap: int = 400, floor: int = 100) -> bool:
+    """D93: if the raw requirement exceeds the cap, a new decision is required."""
+    if sigma <= 0 or h <= 0:
+        return False
+    raw = math.ceil((1.96 * sigma / h) ** 2)
+    return max(floor, raw) > cap

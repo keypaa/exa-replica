@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 PROVISIONAL = True
-_ALLOWED_LICENSES = {"apache-2.0", "mit"}
+_ALLOWED_LICENSES = {"apache-2.0", "mit", "bsd-2-clause", "bsd-3-clause"}
 
 
 @dataclass(frozen=True, slots=True)
@@ -21,6 +21,7 @@ class Candidate:
     languages: tuple[str, ...]
     params_m: int
     dim: int
+    provisional: bool = True
 
 
 def license_filter(cands: list[Candidate]) -> list[Candidate]:

@@ -24,3 +24,12 @@ def test_run_eval():
     assert r.n == 1
     assert r.recall_at_10 == 1.0
     assert r.ndcg_at_10 == 1.0
+
+
+def test_run_eval_unjudged_graceful():
+    # an unjudged query (no `relevant`) must not KeyError (evidence-blocked set)
+    def system(_q):
+        return ["a"]
+
+    r = run_eval(system, [{"query": "x"}])
+    assert r.n == 1

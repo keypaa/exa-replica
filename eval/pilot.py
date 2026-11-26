@@ -34,5 +34,5 @@ def pilot(
     b = metric(bm25_system, dev_queries)
     h = metric(hybrid_system, dev_queries)
     diffs = paired_diffs(b, h)
-    sigma = statistics.pstdev(diffs) if len(diffs) > 1 else 0.0
+    sigma = statistics.stdev(diffs) if len(diffs) > 1 else 0.0
     return {"sigma": sigma, "n": len(diffs), "paired": True, "diffs": diffs}

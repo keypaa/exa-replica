@@ -30,7 +30,7 @@ def run_eval(
     mrrs: list[float] = []
     for q in queries:
         ranked = system(q["query"])
-        relevant = set(q["relevant"])
+        relevant = set(q.get("relevant") or ())
         relevance = q.get("relevance") or {d: 1.0 for d in relevant}
         recalls.append(recall_at_k(ranked, relevant, 10))
         ndcgs.append(ndcg_at_k(ranked, relevance, 10))
