@@ -64,30 +64,55 @@ def run(warc_url: str, n: int, model: str, k: int = 20) -> dict:
     from exa_replica.domain.models import Filters, Hit, Passage
 
     # ---- build ----
+    import os
+    import shutil
+    import time
+
+    # fresh corpus (the Volume persists across runs)
+    for p in ("/corpus/store", "/corpus/vectors.npy", "/corpus/passages.jsonl"):
+        if os.path.isdir(p):
+            shutil.rmtree(p, ignore_errors=True)
+        elif os.path.exists(p):
+            os.remove(p)
+
+    dst = "/corpus/sample.warc.gz"
+    last: Exception | None = None
+    for attempt in range(5):
+        try:
+            with urllib.request.urlopen(warc_url, timeout=120) as resp, open(dst, "wb") as f:
+                shutil.copyfileobj(resp, f)
+            last = None
+            break
+        except Exception as e:  # noqa: BLE001 - retry transient 503/429
+            last = e
+            time.sleep(2**attempt)
+    if last is not None:
+        raise RuntimeError(f"WARC fetch failed after retries: {last}")
+
     store = ContentStore("/corpus/store")
     items, passages = [], []
-    stream = urllib.request.urlopen(warc_url)
-    count = 0
-    for rec in ArchiveIterator(stream):
-        if rec.rec_type != "response":
-            continue
-        url = rec.rec_headers.get_header("WARC-Target-URI", "")
-        html = rec.content_stream().read().decode("utf-8", "replace")
-        date = rec.rec_headers.get_header("WARC-Date", "")
-        doc = replace(
-            clean(extract(html, date)),
-            url_canonical=canon_v1(url),
-            url_original=url,
-            generation=GEN,
-        )
-        if doc.exclusion == "none" and doc.text_canonical:
-            ch = chunk(doc)
-            if ch.passages:
-                items.append((doc, ch.passages))
-                passages.extend(ch.passages)
-        count += 1
-        if count >= n:
-            break
+    with open(dst, "rb") as stream:
+        count = 0
+        for rec in ArchiveIterator(stream):
+            if rec.rec_type != "response":
+                continue
+            url = rec.rec_headers.get_header("WARC-Target-URI", "")
+            html = rec.content_stream().read().decode("utf-8", "replace")
+            date = rec.rec_headers.get_header("WARC-Date", "")
+            doc = replace(
+                clean(extract(html, date)),
+                url_canonical=canon_v1(url),
+                url_original=url,
+                generation=GEN,
+            )
+            if doc.exclusion == "none" and doc.text_canonical:
+                ch = chunk(doc)
+                if ch.passages:
+                    items.append((doc, ch.passages))
+                    passages.extend(ch.passages)
+            count += 1
+            if count >= n:
+                break
     store.put_many(items)
     embedder = load_embedder(model, device="cuda")
     vecs = []
