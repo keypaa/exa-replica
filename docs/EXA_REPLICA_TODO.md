@@ -206,7 +206,7 @@ So the 9 subject rows below are the **workstreams**; the 8 blindspots (plus B1a/
 - [x] `[BLOCKER]` Embedding model choice: rule + eval protocol → **D81**
 - [x] `[BLOCKER]` Model provenance in manifest → covered by D57 (fields) + D79 (inclusion)
 - [ ] `[BLOCKER]` D81 steps 0–1: long list (≤1B params, dated MTEB capture per D71) + license/language filters on model cards
-- [ ] `[BLOCKER]` D81 filters 3–4: throughput (10k T0 passages, bf16, batch 32/64/128/256) + query p95 on D36 — depends on D44
+- [ ] `[BLOCKER]` D81 filters 3–4: throughput + query p95 — **provisional A10G done** (e5-small 2451–3450 p/s, p95 ~7 ms; `docs/evidence_d81_a10g.md`); full on RTX bf16 pending (D44 frozen)
 - [ ] `[BLOCKER]` D81 filter 5: vector size vs D73 "vectors" share — depends on D73
 - [ ] `[BLOCKER]` D81 dev pilot: σ of paired diffs (BM25 vs hybrid of 1st admitted) — depends on dev golden set; **if no golden set → provisional choice (labelled, cannot be frozen)**
 - [ ] `[BLOCKER]` D81 full finalist run + bootstrap → D81-R; write model/version/PromptConfig/precision into spec (D79)
