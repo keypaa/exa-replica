@@ -6,12 +6,17 @@ license = { text = "Apache-2.0" }
 authors = [{ name = "Keylhan Paumard--Andre" }]
 requires-python = ">=3.12"
 dependencies = [
-  "fastapi",
+  "fastapi>=0.165,<1",
   "uvicorn",
-  "mcp>=2",
+  "mcp>=2,<3",
   "pydantic",
   "pydantic-settings",
 ]
+
+[tool.exa-replica]
+# MCP spec revision targeted at M0 freeze (D89 amended). Serving must not
+# depend on a server-initiated request (elicitation/sampling/roots removed).
+mcp_target_revision = "2026-07-28"
 
 [dependency-groups]
 dev = ["pytest", "mypy", "ruff", "import-linter"]

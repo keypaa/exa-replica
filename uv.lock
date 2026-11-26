@@ -299,8 +299,8 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "fastapi" },
-    { name = "mcp", specifier = ">=2" },
+    { name = "fastapi", specifier = ">=0.165,<1" },
+    { name = "mcp", specifier = ">=2,<3" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "uvicorn" },
