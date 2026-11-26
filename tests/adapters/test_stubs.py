@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 
+from exa_replica.adapters.outbound.store import ContentStore
 from exa_replica.bootstrap.composition import build_gateway
 from exa_replica.domain.models import Hit
 
@@ -17,7 +18,7 @@ class _StubDense:
 
 class _StubLexical:
     def search(self, query, filters, k, deadline):
-        return [Hit("d1", 0.5, "p1")]
+        return []
 
     def stats(self):
         return {}
@@ -26,8 +27,8 @@ class _StubLexical:
         return "v0"
 
 
-def test_gateway_serves_search_and_mcp():
-    app = build_gateway(_StubDense(), _StubLexical())
+def test_gateway_serves_search_and_mcp(tmp_path):
+    app = build_gateway(_StubDense(), _StubLexical(), ContentStore(tmp_path))
 
     # Run as a context manager so the MCP session manager's lifespan starts.
     with TestClient(app, base_url="http://127.0.0.1") as client:

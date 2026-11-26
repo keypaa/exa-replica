@@ -7,8 +7,8 @@ public name.
 
 from __future__ import annotations
 
-from exa_replica.application.orchestrator import Orchestrator
-from exa_replica.domain.models import Filters, Hit
+from exa_replica.application.orchestrator import DocResult, Orchestrator
+from exa_replica.domain.models import Filters
 
 
 class SearchService:
@@ -21,7 +21,5 @@ class SearchService:
         deadline: float,
         filters: Filters | None = None,
         k: int = 10,
-    ) -> list[Hit]:
-        return self._orchestrator.run(
-            query, filters or Filters(), k, deadline
-        )
+    ) -> list[DocResult]:
+        return self._orchestrator.run(query, filters or Filters(), k, deadline)

@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     tier: str = "auto"
     host: str = "127.0.0.1"
     port: int = 8080
+    data_dir: str = ".exa-replica-data"
 
     @field_validator("tier")
     @classmethod

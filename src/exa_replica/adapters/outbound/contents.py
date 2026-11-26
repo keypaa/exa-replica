@@ -1,12 +1,37 @@
-"""Outbound contents stub (M0). Implemented in M1 via store + highlights (D84)."""
+"""Contents provider (D20/D84): `/contents` reads stored text + S0 highlights.
+
+Per-item status is `ok` / `not_found` (D20). A taken-down or absent document is
+`not_found` (the store returns None). `not_in_index` (duplicate) arrives with
+dedup in a later task.
+"""
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 
-class StubContentsProvider:
-    """Placeholder for the `/contents` provider (store + highlights, M1)."""
+from exa_replica.application.highlights import highlights
+from exa_replica.ports.content import ContentStorePort
 
-    def fetch(self, *args: object, **kwargs: object) -> None:
-        raise NotImplementedError(
-            "contents provider is a stub in M0; implemented in M1 (D84)"
-        )
+
+class ContentsProvider:
+    def __init__(self, store: ContentStorePort) -> None:
+        self._store = store
+
+    def fetch(self, urls: Sequence[str]) -> list[dict[str, object]]:
+        out: list[dict[str, object]] = []
+        for url in urls:
+            text = self._store.get_text(url)
+            if text is None:
+                out.append(
+                    {"url": url, "status": "not_found", "text": None, "highlights": []}
+                )
+            else:
+                out.append(
+                    {
+                        "url": url,
+                        "status": "ok",
+                        "text": text,
+                        "highlights": highlights(text),
+                    }
+                )
+        return out

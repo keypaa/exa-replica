@@ -26,16 +26,25 @@ class _Lex:
         return "v0"
 
 
+class _FakeStore:
+    def get_text(self, url):
+        return f"text of {url}"
+
+    def get_passages(self, url):
+        return []
+
+
 def test_orchestrator_merges_branches():
-    hits = Orchestrator(_Dense(), _Lex(), plan_for("auto")).run("q", Filters(), 10, 1e9)
-    assert {h.doc_id for h in hits} == {"d1", "d2"}
+    orch = Orchestrator(_Dense(), _Lex(), _FakeStore(), plan_for("auto"))
+    results = orch.run("q", Filters(), 10, 1e9)
+    assert {r.doc_id for r in results} == {"d1", "d2"}
 
 
 def test_deadline_zero_returns_empty():
-    orch = Orchestrator(_Dense(), _Lex(), plan_for("auto"))
+    orch = Orchestrator(_Dense(), _Lex(), _FakeStore(), plan_for("auto"))
     assert orch.run("q", Filters(), 10, 0.0) == []
 
 
 def test_search_service_delegates():
-    svc = SearchService(Orchestrator(_Dense(), _Lex(), plan_for("lite")))
+    svc = SearchService(Orchestrator(_Dense(), _Lex(), _FakeStore(), plan_for("lite")))
     assert svc.run("q", 1e9)
