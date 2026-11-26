@@ -19,6 +19,9 @@ build/
 # SDD scratch (git-ignored ledger/briefs)
 .superpowers/
 
+# large regenerable evidence intermediate (candidates.jsonl rebuilt by the pipeline)
+bench/results/candidates.jsonl
+
 # OS
 .DS_Store
 zenno/traces/

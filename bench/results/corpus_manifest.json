@@ -3,8 +3,8 @@
   "model": "intfloat/multilingual-e5-small",
   "chunker_version": "uax29-1.0;target=128;max=192;overlap=1",
   "generation": "CC-MAIN-2026-43",
-  "n_docs": 188,
-  "n_passages": 1121,
+  "n_docs": 9625,
+  "n_passages": 46631,
   "empty_url_docs": 0,
   "dim": 384
 }

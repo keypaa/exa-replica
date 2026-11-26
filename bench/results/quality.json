@@ -1,0 +1,8 @@
+{
+  "n_queries": 30,
+  "n_candidates": 592,
+  "ndcg_at_10_mean": 0.3885,
+  "recall_at_10_mean": 0.5148,
+  "mrr_mean": 0.5315,
+  "queries_with_relevant": 28
+}
