@@ -12,6 +12,7 @@ dependencies = [
   "pydantic",
   "pydantic-settings",
   "trafilatura",
+  "pyarrow",
 ]
 
 [tool.exa-replica]
@@ -45,6 +46,10 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "glotlid.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "pyarrow.*"
 ignore_missing_imports = true
 
 [tool.ruff]
