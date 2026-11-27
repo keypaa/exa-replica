@@ -1,6 +1,6 @@
 [project]
 name = "exa-replica"
-version = "0.0.0"
+version = "0.1.0"
 description = "Open-source, self-hosted Exa-type search replica (MCP + HTTP)."
 license = { text = "Apache-2.0" }
 authors = [{ name = "Keylhan Paumard--Andre" }]
