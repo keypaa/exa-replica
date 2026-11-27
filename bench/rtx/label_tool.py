@@ -8,12 +8,16 @@ When done: python3 bench/rtx/kappa_label.py score
 
 from __future__ import annotations
 
+import errno
 import http.server
 import json
+import os
+import subprocess
 from pathlib import Path
 
 PATH = Path("bench/results/human_labels.jsonl")
-PORT = 8765
+# D14: allow an alternate port for verification / avoiding a stale server.
+PORT = int(os.environ.get("LABEL_TOOL_PORT", "8765"))
 
 HTML = """<!doctype html><html><head><meta charset="utf-8"><title>Sift labeler</title>
 <style>
@@ -44,7 +48,7 @@ async function load(){
   document.getElementById('query').textContent=r.query;
   document.getElementById('objective').textContent=r.objective?('Objective: '+r.objective):'(no objective)';
   document.getElementById('text').textContent=r.text;
-  document.getElementById('progress').textContent=(r.done)+' / '+r.total+' labeled';
+  document.getElementById('progress').textContent=(r.labeled)+' / '+r.total+' labeled';
 }
 async function label(l){
   await fetch('/api/label',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({index:cur.index,label:l})});
@@ -57,7 +61,7 @@ load();
 
 
 def _load() -> list[dict]:
-    return [json.loads(l) for l in PATH.read_text().splitlines() if l.strip()]
+    return [json.loads(line) for line in PATH.read_text().splitlines() if line.strip()]
 
 
 def _save(rows: list[dict]) -> None:
@@ -87,8 +91,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.wfile.write(b)
         elif self.path == "/api/row":
             idx = next((i for i, r in enumerate(rows) if r.get("human_label") is None), None)
+            labeled = sum(1 for x in rows if x.get("human_label") is not None)
             if idx is None:
-                self._json({"done": True})
+                self._json({"done": True, "labeled": labeled, "total": len(rows)})
             else:
                 r = rows[idx]
                 self._json(
@@ -97,7 +102,11 @@ class Handler(http.server.BaseHTTPRequestHandler):
                         "query": r["query"],
                         "objective": r.get("objective", ""),
                         "text": r["text"],
-                        "done": sum(1 for x in rows if x.get("human_label") is not None),
+                        # D14: 'done' is a boolean flag only; 'labeled' is the count.
+                        # Overloading 'done' with a count made 1 label look like
+                        # completion in the browser (if(r.done)).
+                        "done": False,
+                        "labeled": labeled,
                         "total": len(rows),
                     }
                 )
@@ -116,17 +125,43 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self._json({"error": "not found"}, 404)
 
 
+def _port_holder(port: int) -> str:
+    """Best-effort: report the process already listening on ``port``."""
+    try:
+        out = subprocess.run(
+            ["ss", "-ltnp"], capture_output=True, text=True, timeout=2, check=False
+        ).stdout
+    except (OSError, subprocess.SubprocessError):
+        return ""
+    for line in out.splitlines():
+        if "LISTEN" in line and f":{port} " in line:
+            return line.strip()
+    return ""
+
+
 def main() -> None:
     if not PATH.exists():
         raise SystemExit("run: python3 bench/rtx/kappa_label.py prepare --n 100 first")
+    rows = _load()
+    labeled = sum(1 for r in rows if r.get("human_label") is not None)
+    print(
+        f"loaded {len(rows)} rows from {PATH}: "
+        f"{labeled} labeled, {len(rows) - labeled} remaining",
+        flush=True,
+    )
     try:
         srv = http.server.HTTPServer(("127.0.0.1", PORT), Handler)
-    except OSError:
+    except OSError as exc:
+        if exc.errno != errno.EADDRINUSE:
+            raise
+        holder = _port_holder(PORT)
+        hint = f"\n  holder: {holder}" if holder else ""
         raise SystemExit(
-            f"port {PORT} is in use — a stale server is running. "
-            f"Kill it: `ss -ltnp | grep {PORT}` then `kill <pid>`, and retry."
+            f"port {PORT} is busy — a stale label_tool.py is probably still running.{hint}\n"
+            f"Kill it: `ss -ltnp | grep {PORT}` then `kill <pid>`, and retry.\n"
+            f"Or use a free port: LABEL_TOOL_PORT=<port> python3 bench/rtx/label_tool.py"
         ) from None
-    print(f"labeling tool: http://127.0.0.1:{PORT}  (Ctrl-C to stop)")
+    print(f"labeling tool: http://127.0.0.1:{PORT}  (Ctrl-C to stop)", flush=True)
     srv.serve_forever()
 
 
