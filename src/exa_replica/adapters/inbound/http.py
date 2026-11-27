@@ -102,6 +102,15 @@ def create_http_app(
     async def _on_validation_error(_request: object, _exc: object) -> JSONResponse:
         return _err("unsupported_field", "unsupported or invalid field", 400, "unknown")
 
+    @app.middleware("http")
+    async def _cors_off(
+        request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        # CORS is disabled (D91): a cross-origin preflight is refused.
+        if request.method == "OPTIONS" and request.headers.get("origin"):
+            return _err("cors_disabled", "CORS is disabled", 403, "cors")
+        return await call_next(request)
+
     def _authorize(x_api_key: str | None, tier: str, req_id: str) -> JSONResponse | None:
         if auth is None:
             return None
