@@ -77,7 +77,7 @@ So the 9 subject rows below are the **workstreams**; the 8 blindspots (plus B1a/
   - [x] `[BLOCKER]` 2d User management & bans — D10: suspend blocks usage+creation (reversible), ban revokes+blocks (no expiry), both checked at auth + cache invalidation, shared reason enum
   - [x] `[BLOCKER]` 2e DB schema — Postgres v1 (§4.5); storage ports `DocumentStore`/`PassageStore` in `ports/` (D95); Postgres adapter in `adapters/outbound/store/`; testcontainers
   - [x] `[BLOCKER]` 2f Error semantics — D11: Exa envelope + X-Request-Id, strict auth order, 429/503 + Retry-After, MCP JSON-RPC vs isError, custom tags marked
-- [x] `[BLOCKER]` Gate 3 — quality — *protocol frozen (D14/D93/§1.5); evidence pending; Exa snapshot blocked (D19)*
+- [x] `[BLOCKER]` Gate 3 — quality — **not demonstrated** on the random T0 corpus (no relevant docs; κ degenerate); targeted corpus needed for a real Gate 3 (D19). Exa snapshot blocked (D19)
   - [x] `[BLOCKER]` 3a Golden set — resolved (planning) → **D93** (§1.5; EN gate 100/100, FR diagnostic 100); *evidence pending*
   - [x] `[BLOCKER]` 3b Judge calibration — resolved (planning) → **§1.5 + D14** (blind, κ≥0.6 provisional); *evidence pending*
   - [ ] `[LATER]` 3c Exa snapshot — blocked (ToS §4.2(f), D19); replica vs BM25; private durable storage

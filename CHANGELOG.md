@@ -23,7 +23,8 @@ replica (MCP + HTTP).
   rule, D94 metric.
 - **Hardening + release (M5):** D89 topology (gateway + workers, Unix socket +
   msgpack), D90 LRU caches, D68 generation switch, D91 hardening, Gate 5 (D17).
-  Gate 3 (test split) + Gate 4 (blocking) are owner-run on the reference box.
+  **Gate 3 = not demonstrated** (the random T0 corpus lacks relevant docs; see
+  `docs/gate_report.md`); **Gate 4 = not executed** (owner-run on the RTX box).
 
 ### Compatibility
 API compatible with the Exa `/search` + `/contents` surface and the keyless MCP

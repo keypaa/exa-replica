@@ -10,8 +10,9 @@ Open-source, self-hosted, Exa-type search replica: **MCP + HTTP** (`/search`,
 
 ## Status
 
-v0.1.0 release candidate (M0–M5 complete). Gate 3 (test split) and Gate 4
-(blocking perf) are owner-run on the reference box (RTX Pro 6000, D36).
+v0.1.0 release candidate (M0–M5 complete). Gate 0/1/2 ✓; **Gate 3 not
+demonstrated** (the random T0 corpus lacks relevant docs — see
+`docs/gate_report.md`); Gate 4 owner-run on the RTX Pro 6000; Gate 5 partial.
 
 ## Quickstart
 
