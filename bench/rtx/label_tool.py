@@ -119,7 +119,13 @@ class Handler(http.server.BaseHTTPRequestHandler):
 def main() -> None:
     if not PATH.exists():
         raise SystemExit("run: python3 bench/rtx/kappa_label.py prepare --n 100 first")
-    srv = http.server.HTTPServer(("127.0.0.1", PORT), Handler)
+    try:
+        srv = http.server.HTTPServer(("127.0.0.1", PORT), Handler)
+    except OSError:
+        raise SystemExit(
+            f"port {PORT} is in use — a stale server is running. "
+            f"Kill it: `ss -ltnp | grep {PORT}` then `kill <pid>`, and retry."
+        ) from None
     print(f"labeling tool: http://127.0.0.1:{PORT}  (Ctrl-C to stop)")
     srv.serve_forever()
 
