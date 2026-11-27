@@ -1,0 +1,11 @@
+[Unit]
+Description=Exa Replica CPU worker (BM25/contents/highlights)
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/exa-replica-worker-cpu
+Restart=on-failure
+User=exa
+
+[Install]
+WantedBy=multi-user.target

@@ -14,6 +14,7 @@ dependencies = [
   "trafilatura",
   "pyarrow",
   "numpy",
+  "msgpack",
 ]
 
 [tool.exa-replica]
@@ -52,6 +53,10 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "pyarrow.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "msgpack.*"
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]

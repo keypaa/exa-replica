@@ -1,0 +1,11 @@
+[Unit]
+Description=Exa Replica gateway (HTTP + MCP)
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/exa-replica-gateway
+Restart=on-failure
+User=exa
+
+[Install]
+WantedBy=multi-user.target

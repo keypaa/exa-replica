@@ -1,0 +1,11 @@
+[Unit]
+Description=Exa Replica GPU worker (encode/R0/rerank)
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/exa-replica-worker-gpu
+Restart=on-failure
+User=exa
+
+[Install]
+WantedBy=multi-user.target
