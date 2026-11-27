@@ -1,4 +1,4 @@
-from exa_replica.bootstrap.switch import apply_switch, plan_switch
+from exa_replica.bootstrap.switch import SwitchManager, apply_switch, plan_switch
 
 
 def test_switch_peak_or_outage():
@@ -12,3 +12,12 @@ def test_atomic():
     # atomic switch: the new build becomes active, no partial state (D68)
     assert apply_switch("A", "B") == "B"
     assert apply_switch("B", "C") == "C"
+
+
+def test_switch_manager_atomic():
+    sm = SwitchManager("A")
+    sm.set_maintenance(True)
+    assert sm.in_maintenance
+    assert sm.apply("B") == "B"
+    assert sm.active == "B"
+    assert not sm.in_maintenance  # maintenance cleared after switch

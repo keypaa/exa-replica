@@ -25,6 +25,11 @@ mcp_target_revision = "2026-07-28"
 [dependency-groups]
 dev = ["pytest", "pytest-cov", "mypy", "ruff", "import-linter"]
 
+[project.scripts]
+exa-replica-gateway = "exa_replica.entrypoints.search:main"
+exa-replica-worker-gpu = "exa_replica.entrypoints.encode:main"
+exa-replica-worker-cpu = "exa_replica.entrypoints.contents:main"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

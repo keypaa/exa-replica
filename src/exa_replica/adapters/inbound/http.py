@@ -19,7 +19,7 @@ from typing import Protocol
 from fastapi import FastAPI, Header, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from starlette.responses import Response
 from starlette.types import Lifespan
 
@@ -36,7 +36,7 @@ _JSON_PATHS = ("/search", "/contents")
 class SearchRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    query: str
+    query: str = Field(max_length=4096)
     type: str = "auto"
     numResults: int = 10
     includeDomains: list[str] | None = None
@@ -45,7 +45,7 @@ class SearchRequest(BaseModel):
 class ContentsRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    urls: list[str]
+    urls: list[str] = Field(max_length=100)
 
 
 class Authenticator(Protocol):

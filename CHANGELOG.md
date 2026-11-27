@@ -28,4 +28,5 @@ replica (MCP + HTTP).
 ### Compatibility
 API compatible with the Exa `/search` + `/contents` surface and the keyless MCP
 `web_search_exa` / `web_fetch_exa` tools. This project is **not affiliated with
-Exa**; the public name is neutral (D97).
+Exa**; the **public name is still pending** (D97) and will be chosen before first
+publication.

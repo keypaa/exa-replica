@@ -22,10 +22,12 @@ from exa_replica.adapters.outbound.pg.keys import ApiKeyService, InMemoryKeyRepo
 from exa_replica.adapters.outbound.pg.limits import RateLimiter
 from exa_replica.adapters.outbound.reranker import load_reranker
 from exa_replica.adapters.outbound.store import ContentStore
+from exa_replica.application.cache import CacheLayer
 from exa_replica.application.orchestrator import Orchestrator
 from exa_replica.application.plans import plan_for
 from exa_replica.application.search_service import SearchService
 from exa_replica.bootstrap.config import Settings
+from exa_replica.bootstrap.topology import build_id_consistent
 from exa_replica.ports.content import ContentStorePort
 from exa_replica.ports.index import DenseIndex as DenseIndexPort
 from exa_replica.ports.index import LexicalIndex
@@ -46,7 +48,10 @@ def build_gateway(
     service = SearchService(
         Orchestrator(dense, lexical, store, plan_for(tier), reranker=reranker)
     )
-    contents_provider = ContentsProvider(store)
+    if not build_id_consistent([INDEX_VERSION]):  # D89: never mix builds
+        raise RuntimeError("inconsistent build_id across workers")
+    cache = CacheLayer()
+    contents_provider = ContentsProvider(store, cache, INDEX_VERSION)
     mcp_server = create_mcp_server(service, contents_provider)
     mcp_app = mcp_server.streamable_http_app(
         streamable_http_path="/",

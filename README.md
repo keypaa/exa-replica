@@ -4,8 +4,8 @@ Open-source, self-hosted, Exa-type search replica: **MCP + HTTP** (`/search`,
 `/contents`) over a full pipeline (acquisition → parse → embed → index → serve).
 
 > **Working name:** `exa-replica` is the internal code name (D95). The **public
-> name is neutral and chosen before first publication** (D97). This project is
-> **not affiliated with Exa**; compatibility is stated, not implied by the name.
+> name is still pending** and will be chosen before first publication (D97). This
+> project is **not affiliated with Exa**.
 
 ## Status
 
