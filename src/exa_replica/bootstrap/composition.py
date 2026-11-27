@@ -1,8 +1,9 @@
 """Composition root (D92): the only place adapters are wired behind the ports.
 
 `build_gateway` takes the port implementations (tests inject fakes);
-`build_default_gateway` wires the M1 adapters (empty indices until a real build
-loads passages). Entrypoints import only this module — never adapters (D96).
+`build_default_gateway` wires the M3 keyed pipeline (in-memory identity for M3,
+Postgres is the deploy impl) + the real reranker for the auto tier. Entrypoints
+import only this module — never adapters (D96).
 """
 
 from __future__ import annotations
@@ -16,6 +17,10 @@ from exa_replica.adapters.outbound.ann import DenseIndex
 from exa_replica.adapters.outbound.bm25 import BM25Index
 from exa_replica.adapters.outbound.contents import ContentsProvider
 from exa_replica.adapters.outbound.encoder import load_embedder
+from exa_replica.adapters.outbound.pg.auth import InMemoryAccounts, PgAuthenticator
+from exa_replica.adapters.outbound.pg.keys import ApiKeyService, InMemoryKeyRepository
+from exa_replica.adapters.outbound.pg.limits import RateLimiter
+from exa_replica.adapters.outbound.reranker import load_reranker
 from exa_replica.adapters.outbound.store import ContentStore
 from exa_replica.application.orchestrator import Orchestrator
 from exa_replica.application.plans import plan_for
@@ -24,7 +29,7 @@ from exa_replica.bootstrap.config import Settings
 from exa_replica.ports.content import ContentStorePort
 from exa_replica.ports.index import DenseIndex as DenseIndexPort
 from exa_replica.ports.index import LexicalIndex
-from exa_replica.ports.limits import RateLimiterPort
+from exa_replica.ports.rerank import RerankPort
 
 INDEX_VERSION = "build-0"
 
@@ -35,9 +40,12 @@ def build_gateway(
     store: ContentStorePort,
     tier: str = "auto",
     auth: Authenticator | None = None,
-    limiter: RateLimiterPort | None = None,
+    limiter: RateLimiter | None = None,
+    reranker: RerankPort | None = None,
 ) -> FastAPI:
-    service = SearchService(Orchestrator(dense, lexical, store, plan_for(tier)))
+    service = SearchService(
+        Orchestrator(dense, lexical, store, plan_for(tier), reranker=reranker)
+    )
     contents_provider = ContentsProvider(store)
     mcp_server = create_mcp_server(service, contents_provider)
     mcp_app = mcp_server.streamable_http_app(
@@ -49,8 +57,6 @@ def build_gateway(
             enable_dns_rebinding_protection=False
         ),
     )
-    # The MCP session manager runs in the app lifespan; Starlette Mount does not
-    # propagate a sub-app's lifespan, so the parent FastAPI must adopt it.
     app = create_http_app(
         service,
         contents_provider,
@@ -66,7 +72,22 @@ def build_gateway(
 def build_default_gateway(settings: Settings | None = None) -> FastAPI:
     settings = settings or Settings()
     store = ContentStore(settings.data_dir)
-    # M1: empty indices (a real build loads passages in M3+); model loads lazily.
-    dense = DenseIndex(load_embedder(), [])
+    # Keyed mode (D3–D11): in-memory identity for M3 (Postgres is the deploy impl).
+    accounts = InMemoryAccounts()
+    keys = ApiKeyService(InMemoryKeyRepository(), pepper=b"dev-pepper")
+    auth = PgAuthenticator(keys, accounts)
+    limiter = RateLimiter(
+        {"lite": (10.0, 150), "auto": (5.0, 100), "contents": (100.0, 1000)}
+    )
+    dense = DenseIndex(load_embedder(settings.model, device="cuda"), [])
     lexical = BM25Index([])
-    return build_gateway(dense, lexical, store, tier=settings.tier)
+    reranker = load_reranker()
+    return build_gateway(
+        dense,
+        lexical,
+        store,
+        tier=settings.tier,
+        auth=auth,
+        limiter=limiter,
+        reranker=reranker,
+    )

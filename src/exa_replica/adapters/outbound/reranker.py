@@ -19,6 +19,12 @@ def _sigmoid(x: float) -> float:
     return 1.0 / (1.0 + math.exp(-x))
 
 
+def load_reranker(model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2") -> Reranker:
+    from sentence_transformers import CrossEncoder
+
+    return Reranker(CrossEncoder(model_name))
+
+
 class Reranker:
     def __init__(self, model: object, timeout_s: float = 0.8) -> None:
         self._model = model
@@ -33,13 +39,20 @@ class Reranker:
         fusion = [h for h, _ in hits_with_text]
         if not fusion:
             return [], False
-        # Deadline already exceeded -> keep fusion order, mark degraded (D67).
-        if deadline <= time.monotonic():
+        start = time.monotonic()
+        budget = min(deadline, start + self._timeout)
+        # Deadline/timeout already exceeded -> keep fusion order, degraded (D67).
+        if start >= budget:
             return fusion, True
         pairs = [(query, t) for _, t in hits_with_text]
         raw = self._model.predict(pairs)  # type: ignore[attr-defined]
-        scored = [(_sigmoid(float(s)), h) for (h, _), s in zip(hits_with_text, raw)]
-        if deadline <= time.monotonic():  # scoring ran past the deadline
+        if time.monotonic() > budget:  # scoring ran past the budget
             return fusion, True
+        scored: list[tuple[float, Hit]] = []
+        for (h, _), s in zip(hits_with_text, raw):
+            s = float(s)
+            if not math.isfinite(s):  # NaN/inf -> degraded, keep fusion (D67)
+                return fusion, True
+            scored.append((_sigmoid(s), h))
         scored.sort(key=lambda x: (-x[0], x[1].doc_id))
         return [h for _, h in scored], False

@@ -1,9 +1,11 @@
 """Inbound HTTP adapter (D8/D11/D22/D23/D27/D99).
 
 `/search` (lite/auto) + `/contents`. Keyed mode (D3–D11): strict auth order
-(401 invalid key → 403 banned/suspended → 429 rate/quota). Error envelope
-`{requestId, error:{tag,message}}` + `X-Request-Id` (D11). 413 (body), 415
-(media type), 409 (index version). Keyless when `auth` is None (D8).
+(401 invalid key → 403 banned/suspended → 429 rate/quota) on both routes.
+Error envelope `{requestId, error:{tag,message}}` + `X-Request-Id` (D11);
+`X-Index-Version` echoed (D99); 413 (body), 415 (media type), 409 (index
+version). Keyless when `auth` is None (D8). The raw key is never used as a
+limiter identity (D91) — the account id is.
 """
 
 from __future__ import annotations
@@ -11,6 +13,7 @@ from __future__ import annotations
 import time
 import uuid
 from collections.abc import Awaitable, Callable
+from datetime import UTC, datetime
 from typing import Protocol
 
 from fastapi import FastAPI, Header, Request
@@ -26,7 +29,7 @@ from exa_replica.domain.models import Filters
 from exa_replica.ports.content import ContentsPort
 from exa_replica.ports.limits import RateLimiterPort
 
-MAX_BODY_BYTES = 1_000_000  # D91
+MAX_BODY_BYTES = 1_048_576  # 1 MiB (D91)
 _JSON_PATHS = ("/search", "/contents")
 
 
@@ -80,7 +83,7 @@ def create_http_app(
         req_id = request.headers.get("x-request-id") or uuid.uuid4().hex
         request.state.req_id = req_id
         cl = request.headers.get("content-length")
-        if cl and int(cl) > MAX_BODY_BYTES:
+        if cl and cl.isdigit() and int(cl) > MAX_BODY_BYTES:
             return _err("payload_too_large", "request body too large", 413, req_id)
         if (
             request.method == "POST"
@@ -90,11 +93,34 @@ def create_http_app(
             return _err("unsupported_media_type", "content-type must be application/json", 415, req_id)
         response = await call_next(request)
         response.headers["X-Request-Id"] = req_id
+        expected = getattr(app.state, "index_version", None)
+        if expected is not None:
+            response.headers["X-Index-Version"] = expected
         return response
 
     @app.exception_handler(RequestValidationError)
     async def _on_validation_error(_request: object, _exc: object) -> JSONResponse:
         return _err("unsupported_field", "unsupported or invalid field", 400, "unknown")
+
+    def _authorize(x_api_key: str | None, tier: str, req_id: str) -> JSONResponse | None:
+        if auth is None:
+            return None
+        if not x_api_key:
+            return _err("missing_key", "missing API key", 401, req_id)
+        account = auth.authenticate(x_api_key)  # uniform failure (D3)
+        if account is None:
+            return _err("invalid_key", "invalid API key", 401, req_id)
+        status = auth.account_status(account)
+        if status in ("banned", "suspended"):
+            return _err("forbidden", f"account {status}", 403, req_id)
+        if limiter is not None:
+            day = datetime.now(UTC).strftime("%Y-%m-%d")
+            ls = limiter.check(account, status, tier, time.monotonic(), day)
+            if ls == LimitStatus.RATE:
+                return _err("rate_limit", "rate limit exceeded", 429, req_id, retry_after=1)
+            if ls == LimitStatus.QUOTA:
+                return _err("quota_exceeded", "daily quota exceeded", 429, req_id, retry_after=3600)
+        return None
 
     @app.get("/health")
     def health() -> dict[str, str]:
@@ -113,25 +139,9 @@ def create_http_app(
             return _err("index_version_mismatch", "index version mismatch", 409, req_id)
         if req.type not in ("lite", "auto"):
             return _err("unsupported_value", f"type {req.type!r} not supported", 400, req_id)
-
-        account = None
-        status = "active"
-        if auth is not None:
-            if not x_api_key:
-                return _err("missing_key", "missing API key", 401, req_id)
-            account = auth.authenticate(x_api_key)
-            if account is None:
-                return _err("invalid_key", "invalid API key", 401, req_id)
-            status = auth.account_status(account)
-            if status in ("banned", "suspended"):
-                return _err("forbidden", f"account {status}", 403, req_id)
-        if limiter is not None and account is not None:
-            ls = limiter.check(x_api_key or "", status, req.type, time.monotonic())
-            if ls == LimitStatus.RATE:
-                return _err("rate_limit", "rate limit exceeded", 429, req_id, retry_after=1)
-            if ls == LimitStatus.QUOTA:
-                return _err("quota_exceeded", "daily quota exceeded", 429, req_id, retry_after=3600)
-
+        err = _authorize(x_api_key, req.type, req_id)
+        if err is not None:
+            return err
         deadline = time.monotonic() + 10.0
         filters = Filters(domains=tuple(req.includeDomains or ()))
         results = service.run(req.query, deadline, filters, req.numResults)
@@ -143,7 +153,15 @@ def create_http_app(
         }
 
     @app.post("/contents")
-    def contents(req: ContentsRequest) -> object:
+    def contents(
+        req: ContentsRequest,
+        request: Request,
+        x_api_key: str | None = Header(default=None),
+    ) -> object:
+        req_id = request.state.req_id
+        err = _authorize(x_api_key, "contents", req_id)
+        if err is not None:
+            return err
         return {"results": contents_provider.fetch(req.urls)}
 
     return app

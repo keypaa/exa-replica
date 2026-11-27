@@ -26,6 +26,7 @@ def test_gate3_dev_quality():
             by_query[r["query"]].append(int(r["label"]))
     ndcgs = [_ndcg_at_k(v, 10) for v in by_query.values()]
     mean = sum(ndcgs) / len(ndcgs)
-    # a valid dev quality report; the test split is NOT read here (D14)
+    # a valid, falsifiable dev quality report; the test split is NOT read (D14)
     assert 0.0 <= mean <= 1.0
     assert len(by_query) > 0
+    assert mean > 0.1, "dev quality must clear a floor (falsifiable)"

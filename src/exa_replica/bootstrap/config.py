@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     host: str = "127.0.0.1"
     port: int = 8080
     data_dir: str = ".exa-replica-data"
+    model: str = "intfloat/multilingual-e5-small"
 
     @field_validator("tier")
     @classmethod

@@ -32,3 +32,30 @@ def test_rerank_timeout_fusion():
     reranked, degraded = r.rerank("q", hits, deadline=0.0)  # expired
     assert degraded  # >800ms / deadline -> fusion order + degraded (D67)
     assert [h.doc_id for h in reranked] == ["d1", "d2"]  # fusion order kept
+
+
+def test_rerank_slow_model():
+    import time
+
+    class _SlowCE:
+        def predict(self, pairs):
+            time.sleep(0.05)
+            return [1.0 for _ in pairs]
+
+    r = Reranker(_SlowCE(), timeout_s=0.01)  # 10ms budget
+    hits = [(Hit("d1", 0.5, "p1"), "x")]
+    reranked, degraded = r.rerank("q", hits, deadline=1e9)
+    assert degraded  # scoring overran the budget -> fusion order (D67)
+    assert reranked[0].doc_id == "d1"
+
+
+def test_rerank_nan_degraded():
+    class _NanCE:
+        def predict(self, pairs):
+            return [float("nan") for _ in pairs]
+
+    r = Reranker(_NanCE())
+    hits = [(Hit("d1", 0.5, "p1"), "x")]
+    reranked, degraded = r.rerank("q", hits, deadline=1e9)
+    assert degraded  # NaN/inf -> fusion order + degraded (D67)
+    assert reranked[0].doc_id == "d1"

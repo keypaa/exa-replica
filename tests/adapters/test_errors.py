@@ -83,3 +83,23 @@ def test_409(tmp_path):
         headers={"X-Index-Version": "bogus"},
     )
     assert r.status_code == 409
+
+
+def test_quota_counted(tmp_path):
+    # a keyed response consumes quota (D9): daily=1 -> 2nd is 429
+    limiter = RateLimiter({"lite": (10.0, 1)})
+    c = _client(tmp_path, auth=_FakeAuth(), limiter=limiter)
+    h = {"x-api-key": "exa_good"}
+    assert c.post("/search", json={"query": "x", "type": "lite"}, headers=h).status_code == 200
+    assert c.post("/search", json={"query": "x", "type": "lite"}, headers=h).status_code == 429
+    # X-Index-Version echoed (D99)
+    assert "X-Index-Version" in c.post("/search", json={"query": "x", "type": "lite"}, headers=h).headers
+
+
+def test_key_not_in_logs(tmp_path):
+    # the raw key is never a limiter identity (D91) — the account id is
+    limiter = RateLimiter({"lite": (10.0, 150)})
+    c = _client(tmp_path, auth=_FakeAuth(), limiter=limiter)
+    c.post("/search", json={"query": "x", "type": "lite"}, headers={"x-api-key": "exa_good"})
+    assert "exa_good" not in limiter._buckets
+    assert "acc1" in limiter._buckets

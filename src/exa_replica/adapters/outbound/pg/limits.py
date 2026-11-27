@@ -61,7 +61,12 @@ class RateLimiter:
         self._daily: dict[str, DailyCounter] = {}
 
     def check(
-        self, key_id: str, account_status: str, tier: str, now: float
+        self,
+        key_id: str,
+        account_status: str,
+        tier: str,
+        now: float,
+        day: str | None = None,
     ) -> LimitStatus:
         if account_status == "banned":
             return LimitStatus.BANNED
@@ -72,6 +77,6 @@ class RateLimiter:
         if not bucket.allow(now):
             return LimitStatus.RATE
         counter = self._daily.setdefault(key_id, DailyCounter(daily))
-        if not counter.hit(_day(now)):
+        if not counter.hit(day if day is not None else _day(now)):
             return LimitStatus.QUOTA
         return LimitStatus.OK

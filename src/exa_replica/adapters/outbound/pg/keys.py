@@ -44,6 +44,22 @@ class ApiKeyRepository(Protocol):
     def list_by_account(self, account_id: str) -> list[KeyRecord]: ...
 
 
+class InMemoryKeyRepository:
+    """In-memory repo for M3 (the Postgres schema is the deploy implementation)."""
+
+    def __init__(self) -> None:
+        self._d: dict[str, KeyRecord] = {}
+
+    def put(self, rec: KeyRecord) -> None:
+        self._d[rec.key_id] = rec
+
+    def get(self, key_id: str) -> KeyRecord | None:
+        return self._d.get(key_id)
+
+    def list_by_account(self, account_id: str) -> list[KeyRecord]:
+        return [r for r in self._d.values() if r.account_id == account_id]
+
+
 class ApiKeyService:
     def __init__(
         self,
