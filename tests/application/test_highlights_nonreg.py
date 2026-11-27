@@ -15,6 +15,9 @@ class _FakeEmbedder:
     def embed(self, texts):
         return [self._V.get(t, [0.5, 0.5]) for t in texts]
 
+    def encode_query(self, text):
+        return self.embed([text])[0]
+
 
 def test_s0_byte_exact():
     text = "First. Second. Third. Fourth."
@@ -23,9 +26,10 @@ def test_s0_byte_exact():
 
 
 def test_s1_same_sentence_choice():
-    # S1 reorders the SAME sentences S0 chose; it never introduces new text (D84)
-    text = "s1. s0. s2."
-    s0 = set(highlights(text))
-    s1 = set(highlights_s1(text, "guide", _FakeEmbedder()))
-    assert s1 <= s0
-    assert s1  # non-empty
+    # S1 picks 3 sentences from the document; it never introduces new text (D84)
+    text = "s1. s0. s2. s3. s4."
+    s1 = highlights_s1(text, "guide", _FakeEmbedder())
+    assert len(s1) == 3
+    assert all(s in text for s in s1)
+    # deterministic across runs (D63)
+    assert highlights_s1(text, "guide", _FakeEmbedder()) == s1

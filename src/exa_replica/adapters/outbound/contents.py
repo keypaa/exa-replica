@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from exa_replica.application.highlights import highlights
+from exa_replica.application.highlights_s1 import select_highlights
 from exa_replica.ports.content import ContentStorePort
 
 
@@ -31,7 +31,7 @@ class ContentsProvider:
                         "url": url,
                         "status": "ok",
                         "text": text,
-                        "highlights": highlights(text),
+                        "highlights": select_highlights(text, "", "auto", s1_enabled=False),
                     }
                 )
         return out

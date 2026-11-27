@@ -25,6 +25,10 @@ class Embedder:
         raw = self._model.encode(texts)
         return [[float(x) for x in vec] for vec in raw]
 
+    def encode_query(self, text: str) -> list[float]:
+        # D61 query template (e5: "query: " prefix).
+        return self.embed([f"query: {text}"])[0]
+
 
 def load_embedder(model_name: str = DEFAULT_MODEL, device: str = "cpu") -> Embedder:
     from sentence_transformers import SentenceTransformer

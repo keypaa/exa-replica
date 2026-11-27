@@ -9,8 +9,10 @@ from __future__ import annotations
 import random
 from collections.abc import Sequence
 
+from eval.highlight_metric import kappa_uncalibrated
+
 _MIN_GAIN = 0.02  # 2 points (D84)
-_N_BOOT = 2000
+_N_BOOT = 10_000
 
 
 def adopt_s1(
@@ -37,3 +39,23 @@ def adopt_s1(
 def r2_switch(s1_p95_ms: float, budget_ms: float) -> bool:
     """True -> S1 p95 over budget, fall back to S0 (D84 R2)."""
     return s1_p95_ms > budget_ms
+
+
+def decide_s1(
+    s0_scores: Sequence[float],
+    s1_scores: Sequence[float],
+    p95_ms: float,
+    kappa: float,
+    budget_ms: float,
+    min_gain: float = _MIN_GAIN,
+) -> tuple[bool, dict]:
+    """Compose R1 (IC95) + κ gate + R2 budget -> (adopt, log_event) (D84/D94)."""
+    if kappa_uncalibrated(kappa):
+        return False, {"decision": "reject", "reason": "kappa_uncalibrated", "kappa": kappa}
+    if r2_switch(p95_ms, budget_ms):
+        return False, {"decision": "s0", "reason": "r2_exceeded", "p95_ms": p95_ms}
+    adopt = adopt_s1(s0_scores, s1_scores, min_gain=min_gain)
+    return adopt, {
+        "decision": "s1" if adopt else "s0",
+        "reason": "ic95" if adopt else "no_ic95",
+    }

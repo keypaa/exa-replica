@@ -17,9 +17,7 @@ def success_at_3(highlights: Sequence[str], relevant: set[str]) -> float:
 
 def mean_precision_top10(ranked: Sequence[str], relevant: set[str]) -> float:
     top = ranked[:10]
-    if not top:
-        return 0.0
-    return sum(1 for r in top if r in relevant) / len(top)
+    return sum(1 for r in top if r in relevant) / 10
 
 
 def kappa_uncalibrated(kappa: float, threshold: float = KAPPA_THRESHOLD) -> bool:

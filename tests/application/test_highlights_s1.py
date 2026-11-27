@@ -17,6 +17,9 @@ class _FakeEmbedder:
     def embed(self, texts):
         return [self._V.get(t, [0.5, 0.5]) for t in texts]
 
+    def encode_query(self, text):
+        return self.embed([text])[0]
+
 
 def test_s1_ranks_by_cosine():
     text = "s1. s0. s2."

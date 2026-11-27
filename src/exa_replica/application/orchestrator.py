@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from exa_replica.application.fusion import fuse
-from exa_replica.application.highlights import highlights
+from exa_replica.application.highlights_s1 import select_highlights
 from exa_replica.application.plans import TierPlan
 from exa_replica.domain.models import Filters, Hit
 from exa_replica.ports.content import ContentStorePort
@@ -79,7 +79,11 @@ class Orchestrator:
             text = self._store.get_text(dh.doc_id)
             if text is None:  # not found or taken down (D52)
                 continue
-            hl = highlights(text, query) if "highlights" in self._plan.stages else ()
+            hl = (
+                select_highlights(text, query, self._plan.tier, s1_enabled=False)
+                if "highlights" in self._plan.stages
+                else ()
+            )
             out.append(
                 DocResult(
                     dh.doc_id, dh.score, dh.passage_id, text, tuple(hl), "ok", degraded
