@@ -1,4 +1,4 @@
-"""κ-labeling helper (Gate 3, §1.5/D14).
+"""κ-labeling helper (Gate 3, §1.5/D14). Self-contained (no package import).
 
 prepare: write a BLIND template (query, objective, text, llm_label, human_label=null)
 for N rows of the dev golden set. You fill human_label (0-3) by reading, ignoring
@@ -14,12 +14,23 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections import Counter
 
-from eval.judge import cohen_kappa
+
+def cohen_kappa(a: list[int], b: list[int]) -> float:
+    n = len(a)
+    if n == 0:
+        return 0.0
+    labels = set(a) | set(b)
+    po = sum(1 for x, y in zip(a, b) if x == y) / n
+    ca, cb = Counter(a), Counter(b)
+    pe = sum((ca[l] / n) * (cb[l] / n) for l in labels)
+    return (po - pe) / (1.0 - pe) if pe < 1.0 else 1.0
 
 
 def prepare(src: str, out: str, n: int) -> None:
-    rows = [json.loads(line) for line in open(src) if line.strip()][:n]
+    with open(src) as f:
+        rows = [json.loads(line) for line in f if line.strip()][:n]
     with open(out, "w") as f:
         for r in rows:
             f.write(
@@ -39,7 +50,8 @@ def prepare(src: str, out: str, n: int) -> None:
 
 
 def score(path: str) -> None:
-    rows = [json.loads(line) for line in open(path) if line.strip()]
+    with open(path) as f:
+        rows = [json.loads(line) for line in f if line.strip()]
     pairs = [
         (r["llm_label"], r["human_label"])
         for r in rows
