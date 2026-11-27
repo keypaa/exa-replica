@@ -1,0 +1,128 @@
+"""Local web labeling tool (stdlib only, zero-install). Gate 3 κ calibration.
+
+Run:  python3 bench/rtx/label_tool.py
+Then open http://127.0.0.1:8765 — read each (query, text), click 0-3 (or press
+0/1/2/3). Progress is saved to bench/results/human_labels.jsonl after each label.
+When done: python3 bench/rtx/kappa_label.py score
+"""
+
+from __future__ import annotations
+
+import http.server
+import json
+from pathlib import Path
+
+PATH = Path("bench/results/human_labels.jsonl")
+PORT = 8765
+
+HTML = """<!doctype html><html><head><meta charset="utf-8"><title>Sift labeler</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:820px;margin:24px auto;padding:0 16px;color:#111}
+#progress{color:#666;font-size:14px;margin-bottom:12px}
+.card{border:1px solid #ddd;border-radius:10px;padding:18px}
+h3{margin:0 0 6px}.obj{color:#555;font-size:14px;margin:0 0 12px}
+pre{white-space:pre-wrap;word-wrap:break-word;background:#f7f7f7;padding:12px;border-radius:8px;max-height:340px;overflow:auto;font-size:15px}
+.btns{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+button{font-size:15px;padding:12px 16px;border-radius:8px;border:1px solid #bbb;background:#fff;cursor:pointer}
+button:hover{background:#eef}
+.done{text-align:center;padding:60px 0;font-size:20px}
+</style></head><body>
+<div id="app"><div id="progress"></div>
+<div class="card"><h3 id="query"></h3><p class="obj" id="objective"></p><pre id="text"></pre>
+<div class="btns">
+<button data-l="0">0 · Irrelevant</button>
+<button data-l="1">1 · Somewhat</button>
+<button data-l="2">2 · Relevant</button>
+<button data-l="3">3 · Highly relevant</button>
+</div></div></div>
+<script>
+let cur=null;
+async function load(){
+  const r=await fetch('/api/row').then(r=>r.json());
+  if(r.done){document.getElementById('app').innerHTML='<div class="done">Done — all labeled.<br>Run: python3 bench/rtx/kappa_label.py score</div>';return;}
+  cur=r;
+  document.getElementById('query').textContent=r.query;
+  document.getElementById('objective').textContent=r.objective?('Objective: '+r.objective):'(no objective)';
+  document.getElementById('text').textContent=r.text;
+  document.getElementById('progress').textContent=(r.done)+' / '+r.total+' labeled';
+}
+async function label(l){
+  await fetch('/api/label',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({index:cur.index,label:l})});
+  load();
+}
+document.querySelectorAll('button[data-l]').forEach(b=>b.onclick=()=>label(parseInt(b.dataset.l)));
+document.addEventListener('keydown',e=>{if(['0','1','2','3'].includes(e.key))label(parseInt(e.key));});
+load();
+</script></body></html>"""
+
+
+def _load() -> list[dict]:
+    return [json.loads(l) for l in PATH.read_text().splitlines() if l.strip()]
+
+
+def _save(rows: list[dict]) -> None:
+    PATH.write_text("\n".join(json.dumps(r) for r in rows) + "\n")
+
+
+class Handler(http.server.BaseHTTPRequestHandler):
+    def log_message(self, *_a):
+        pass
+
+    def _json(self, obj, code=200):
+        b = json.dumps(obj).encode()
+        self.send_response(code)
+        self.send_header("content-type", "application/json")
+        self.send_header("content-length", str(len(b)))
+        self.end_headers()
+        self.wfile.write(b)
+
+    def do_GET(self):
+        rows = _load()
+        if self.path == "/":
+            b = HTML.encode()
+            self.send_response(200)
+            self.send_header("content-type", "text/html; charset=utf-8")
+            self.send_header("content-length", str(len(b)))
+            self.end_headers()
+            self.wfile.write(b)
+        elif self.path == "/api/row":
+            idx = next((i for i, r in enumerate(rows) if r.get("human_label") is None), None)
+            if idx is None:
+                self._json({"done": True})
+            else:
+                r = rows[idx]
+                self._json(
+                    {
+                        "index": idx,
+                        "query": r["query"],
+                        "objective": r.get("objective", ""),
+                        "text": r["text"],
+                        "done": sum(1 for x in rows if x.get("human_label") is not None),
+                        "total": len(rows),
+                    }
+                )
+        else:
+            self._json({"error": "not found"}, 404)
+
+    def do_POST(self):
+        if self.path == "/api/label":
+            n = int(self.headers.get("content-length", 0))
+            data = json.loads(self.rfile.read(n))
+            rows = _load()
+            rows[data["index"]]["human_label"] = data["label"]
+            _save(rows)
+            self._json({"ok": True})
+        else:
+            self._json({"error": "not found"}, 404)
+
+
+def main() -> None:
+    if not PATH.exists():
+        raise SystemExit("run: python3 bench/rtx/kappa_label.py prepare --n 100 first")
+    srv = http.server.HTTPServer(("127.0.0.1", PORT), Handler)
+    print(f"labeling tool: http://127.0.0.1:{PORT}  (Ctrl-C to stop)")
+    srv.serve_forever()
+
+
+if __name__ == "__main__":
+    main()
