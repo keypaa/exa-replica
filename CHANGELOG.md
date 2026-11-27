@@ -28,5 +28,5 @@ replica (MCP + HTTP).
 ### Compatibility
 API compatible with the Exa `/search` + `/contents` surface and the keyless MCP
 `web_search_exa` / `web_fetch_exa` tools. This project is **not affiliated with
-Exa**; the **public name is still pending** (D97) and will be chosen before first
-publication.
+Exa**. Public name: **Sift** (D97); PyPI `sift` is taken, so the distribution
+name will be a variant (e.g. `sift-search`) at publish time.

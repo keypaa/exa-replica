@@ -1,11 +1,12 @@
-# Exa Replica (working name)
+# Sift
 
 Open-source, self-hosted, Exa-type search replica: **MCP + HTTP** (`/search`,
 `/contents`) over a full pipeline (acquisition → parse → embed → index → serve).
 
-> **Working name:** `exa-replica` is the internal code name (D95). The **public
-> name is still pending** and will be chosen before first publication (D97). This
-> project is **not affiliated with Exa**.
+> **Naming:** **Sift** is the public name (D97). The internal code name is
+> `exa-replica` (D95). PyPI `sift` is already taken, so the distribution name will
+> be a variant (e.g. `sift-search`) at publish time. This project is **not
+> affiliated with Exa**.
 
 ## Status
 
