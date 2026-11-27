@@ -1,0 +1,13 @@
+{
+  "profile": "Modal A10G",
+  "model": "intfloat/multilingual-e5-small",
+  "n_vectors": 46631,
+  "k": 100,
+  "r0_exact_ms_per_query": 1.468,
+  "r1": {
+    "500": {"recall_at_k_vs_r0": 0.3847, "ms_per_query": 0.973},
+    "1000": {"recall_at_k_vs_r0": 0.5337, "ms_per_query": 0.133},
+    "2000": {"recall_at_k_vs_r0": 0.677, "ms_per_query": 0.131}
+  },
+  "note": "R0 exact recall=1.0 by definition, 1.47 ms/query on A10G (within budget) -> R0 is the operating point. R1 binary recall@100 0.38-0.68 < 0.95 target (D82) -> R1 invalid as fallback at these K_bin; per D82 that would open HNSW, but R0 meets latency so R1 is not needed for v1. Provisional (A10G fp32, not RTX bf16)."
+}
