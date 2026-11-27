@@ -32,7 +32,7 @@ def prepare(src: str, out: str, n: int) -> None:
     with open(src) as f:
         rows = [json.loads(line) for line in f if line.strip()][:n]
     with open(out, "w") as f:
-        for r in rows:
+        for r in rows:  # noqa: FURB122 - small N, clarity over writelines
             f.write(
                 json.dumps(
                     {
