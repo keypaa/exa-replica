@@ -9,15 +9,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from enum import Enum
 
-
-class LimitStatus(str, Enum):
-    OK = "ok"
-    RATE = "rate"  # -> 429
-    QUOTA = "quota"  # -> 429
-    SUSPENDED = "suspended"  # -> 403/429 per D10
-    BANNED = "banned"  # -> 403/429 per D10
+from exa_replica.domain.limits import LimitStatus
 
 
 @dataclass

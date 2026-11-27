@@ -10,7 +10,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from mcp.server.transport_security import TransportSecuritySettings
 
-from exa_replica.adapters.inbound.http import create_http_app
+from exa_replica.adapters.inbound.http import Authenticator, create_http_app
 from exa_replica.adapters.inbound.mcp import create_mcp_server
 from exa_replica.adapters.outbound.ann import DenseIndex
 from exa_replica.adapters.outbound.bm25 import BM25Index
@@ -24,6 +24,7 @@ from exa_replica.bootstrap.config import Settings
 from exa_replica.ports.content import ContentStorePort
 from exa_replica.ports.index import DenseIndex as DenseIndexPort
 from exa_replica.ports.index import LexicalIndex
+from exa_replica.ports.limits import RateLimiterPort
 
 INDEX_VERSION = "build-0"
 
@@ -33,6 +34,8 @@ def build_gateway(
     lexical: LexicalIndex,
     store: ContentStorePort,
     tier: str = "auto",
+    auth: Authenticator | None = None,
+    limiter: RateLimiterPort | None = None,
 ) -> FastAPI:
     service = SearchService(Orchestrator(dense, lexical, store, plan_for(tier)))
     contents_provider = ContentsProvider(store)
@@ -49,7 +52,11 @@ def build_gateway(
     # The MCP session manager runs in the app lifespan; Starlette Mount does not
     # propagate a sub-app's lifespan, so the parent FastAPI must adopt it.
     app = create_http_app(
-        service, contents_provider, lifespan=mcp_app.router.lifespan_context
+        service,
+        contents_provider,
+        lifespan=mcp_app.router.lifespan_context,
+        auth=auth,
+        limiter=limiter,
     )
     app.state.index_version = INDEX_VERSION
     app.mount("/mcp", mcp_app)
